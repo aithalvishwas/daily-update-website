@@ -1,10 +1,10 @@
 name: daily-update
 
 x-service-env: &service-env
-  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in config/.env (run ./config/setup.sh)}
   DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-dailyupdate}
   DATABASE_USER: ${POSTGRES_USER:-dailyupdate}
-  DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in config/.env (run ./config/setup.sh)}
 
 x-java-service: &java-service
   restart: unless-stopped
@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dailyupdate}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in config/.env (run ./config/setup.sh)}
       POSTGRES_DB: ${POSTGRES_DB:-dailyupdate}
     volumes:
       - db-data:/var/lib/postgresql/data

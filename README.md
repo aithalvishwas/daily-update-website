@@ -83,15 +83,17 @@ You need [Docker](https://docs.docker.com/get-docker/) with Docker Compose.
 ```bash
 git clone https://github.com/aithalvishwas/daily-update-website.git
 cd daily-update-website
-cp config/.env.example config/.env
+./config/setup.sh
 ```
 
-Edit `config/.env`:
+`setup.sh` creates `config/.env` and fills in random values for `POSTGRES_PASSWORD`, `JWT_SECRET` and the first manager's password, then prints the manager login. Running it again never overwrites values you've set.
 
-- `POSTGRES_PASSWORD`: any long random password
-- `JWT_SECRET`: at least 32 characters, e.g. the output of `openssl rand -hex 32`
+Optionally, edit `config/.env`:
+
 - `MANAGER_EMAIL` / `MANAGER_PASSWORD`: the first manager account, created on first start
 - `ANTHROPIC_API_KEY`: your Anthropic API key for AI summaries (get one at [console.anthropic.com](https://console.anthropic.com)). Without it the app still works and shows a basic, non-AI summary.
+
+If you prefer to do it by hand, copy `config/.env.example` to `config/.env` and set `POSTGRES_PASSWORD` and `JWT_SECRET` (at least 32 characters, e.g. `openssl rand -hex 32`); the app won't start without them.
 
 Then build and start everything (the first build downloads Maven and npm packages, so it takes a few minutes):
 
