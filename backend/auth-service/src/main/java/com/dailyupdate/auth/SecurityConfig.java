@@ -20,6 +20,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/managers", "/api/teams").authenticated()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**", "/api/users", "/api/teams").hasRole("MANAGER")
                         .anyRequest().authenticated())
                 .build();

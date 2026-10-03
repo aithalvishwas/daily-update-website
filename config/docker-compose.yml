@@ -43,6 +43,9 @@ services:
     environment:
       <<: *service-env
       PORT: 4001
+      ADMIN_NAME: ${ADMIN_NAME:-Admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       MANAGER_NAME: ${MANAGER_NAME:-Manager}
       MANAGER_EMAIL: ${MANAGER_EMAIL:-}
       MANAGER_PASSWORD: ${MANAGER_PASSWORD:-}

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { api } from '../api.js';
-import { daysBetween, formatDate, localToday, workdaysMissed, workWeek } from '../format.js';
+import { daysBetween, formatDate, localToday, ROLE_LABEL, workdaysMissed, workWeek } from '../format.js';
 import { useLoad } from '../hooks.js';
 import { navigate } from '../router.js';
 import { AttachmentIds } from '../components/Attachments.jsx';
@@ -184,7 +184,7 @@ function PersonDetail({ token, id }) {
           <h1>{person.name}</h1>
           <p className="muted">{[person.position, person.team && `Team ${person.team}`, person.email].filter(Boolean).join(' · ')}</p>
         </div>
-        <Badge tone={person.role === 'manager' ? 'purple' : 'gray'}>{person.role === 'manager' ? 'Manager' : 'Employee'}</Badge>
+        <Badge tone={person.role === 'employee' ? 'gray' : 'purple'}>{ROLE_LABEL[person.role]}</Badge>
       </div>
 
       <div className="stats-row">
@@ -382,10 +382,10 @@ export default function People({ token, id }) {
                         </td>
                         <td>
                           {p.position || <span className="muted">—</span>}
-                          {p.role === 'manager' && (
+                          {p.role !== 'employee' && (
                             <>
                               {' '}
-                              <Badge tone="purple">Manager</Badge>
+                              <Badge tone="purple">{ROLE_LABEL[p.role]}</Badge>
                             </>
                           )}
                         </td>

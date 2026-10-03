@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { api } from '../api.js';
-import { formatDate, localToday } from '../format.js';
+import { formatDate, isManager, localToday } from '../format.js';
 import { announceChange, useLoad } from '../hooks.js';
 import { navigate } from '../router.js';
 import { AttachmentIds } from '../components/Attachments.jsx';
@@ -245,7 +245,7 @@ export function EpicCard({ token, epic, onSaved }) {
 
 function EpicDetail({ token, user, id }) {
   const toast = useToast();
-  const manager = user.role === 'manager';
+  const manager = isManager(user);
   const [epic, reload] = useLoad(() => api(`/api/epics/${id}`, { token }).then((d) => d.epic), [id, token]);
   const [issues] = useLoad(
     () => api('/api/issues', { token }).then((d) => d.issues.filter((i) => i.epicId === Number(id))),
@@ -417,7 +417,7 @@ function EpicDetail({ token, user, id }) {
 }
 
 export default function Epics({ token, user, id }) {
-  const manager = user.role === 'manager';
+  const manager = isManager(user);
   const [epics, reload] = useLoad(() => api('/api/epics', { token }).then((d) => d.epics), [token]);
   const [creating, setCreating] = useState(false);
   const [filter, setFilter] = useState('all');

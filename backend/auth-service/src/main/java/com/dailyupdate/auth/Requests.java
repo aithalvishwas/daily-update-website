@@ -36,6 +36,18 @@ final class Requests {
             @Size(max = 100, message = "Position must be at most 100 characters") String position,
             String role) {}
 
+    record AdminUpdate(
+            @Size(max = 100, message = "Name must be at most 100 characters") String name,
+            @Email(message = "A valid email is required")
+            @Size(max = 255, message = "A valid email is required") String email,
+            @Size(max = 100, message = "Team must be at most 100 characters") String team,
+            @Size(max = 100, message = "Position must be at most 100 characters") String position,
+            String role) {}
+
+    record ResetPassword(
+            @NotBlank(message = "Password must be 8 to 128 characters")
+            @Size(min = 8, max = 128, message = "Password must be 8 to 128 characters") String password) {}
+
     record CreateTeam(
             @NotBlank(message = "Team name is required")
             @Size(max = 100, message = "Team name must be at most 100 characters") String name) {}

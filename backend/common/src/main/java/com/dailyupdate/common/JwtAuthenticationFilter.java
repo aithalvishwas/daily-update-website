@@ -28,8 +28,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 AuthUser user = jwtService.verify(header.substring(7));
-                var auth = new UsernamePasswordAuthenticationToken(
-                        user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.role().toUpperCase())));
+                // Admins also hold the manager role, so every manager rule applies to them.
+                var authorities = user.isAdmin()
+                        ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_MANAGER"))
+                        : List.of(new SimpleGrantedAuthority("ROLE_" + user.role().toUpperCase()));
+                var auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (JwtException | IllegalArgumentException e) {
                 // Invalid token: stay anonymous; protected endpoints answer 401.

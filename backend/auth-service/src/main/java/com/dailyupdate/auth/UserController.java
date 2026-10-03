@@ -2,6 +2,7 @@ package com.dailyupdate.auth;
 
 import com.dailyupdate.common.ApiException;
 import com.dailyupdate.common.AuthUser;
+import com.dailyupdate.common.SecuritySupport;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,10 @@ public class UserController {
     /** Managers: change team or position, or promote. Fields left out stay as they are. */
     @PatchMapping("/api/users/{id}")
     public Map<String, Object> update(@PathVariable long id, @Valid @RequestBody Requests.UpdateUser body) {
+        User target = users.findById(id).orElseThrow(() -> new ApiException(404, "User not found"));
+        if (AuthUser.ADMIN.equals(target.role()) && !SecuritySupport.currentUser().isAdmin()) {
+            throw new ApiException(403, "Only an admin can change an admin account");
+        }
         String role = body.role() == null ? null : roleOrDefault(body.role());
         return Map.of("user", userService.update(id, body.team(), body.position(), role).toPublic());
     }

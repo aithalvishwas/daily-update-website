@@ -18,6 +18,10 @@ app:
   jwt:
     secret: ${JWT_SECRET:}
     ttl-hours: ${JWT_TTL_HOURS:8}
+  admin:
+    name: ${ADMIN_NAME:Admin}
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
   manager:
     name: ${MANAGER_NAME:Manager}
     email: ${MANAGER_EMAIL:}

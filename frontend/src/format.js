@@ -87,3 +87,10 @@ export const HEALTH = {
   overdue: { label: 'Overdue', tone: 'red' },
   done: { label: 'Done', tone: 'blue' },
 };
+
+/** Admins can do everything managers can. */
+export function isManager(user) {
+  return user?.role === 'manager' || user?.role === 'admin';
+}
+
+export const ROLE_LABEL = { admin: 'Admin', manager: 'Manager', employee: 'Employee' };

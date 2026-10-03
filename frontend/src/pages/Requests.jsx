@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { formatDate, isWeekend, localToday, timeAgo, toIso } from '../format.js';
+import { formatDate, isManager, isWeekend, localToday, timeAgo, toIso } from '../format.js';
 import { announceChange, useLoad } from '../hooks.js';
 import Avatar from '../components/Avatar.jsx';
 import { DatePicker } from '../components/Calendar.jsx';
@@ -225,7 +225,7 @@ function RequestCard({ token, request: r, manager, highlighted, onChanged, onSug
 }
 
 export default function Requests({ token, user, id }) {
-  const manager = user.role === 'manager';
+  const manager = isManager(user);
   const [requests, reload] = useLoad(() => api('/api/weekend-requests', { token }).then((d) => d.requests), [token]);
   const [tab, setTab] = useState(manager ? 'pending' : 'all');
   const [suggesting, setSuggesting] = useState(null);

@@ -10,6 +10,10 @@ A work app for teams: employees log what they did each day against the epics the
 | **Blocker conversation** | **Weekend requests and alerts** |
 | ![Manager replying to a blocker with an attachment](docs/issue.png) | ![Weekend requests with the notification panel open](docs/requests.png) |
 
+**Admin: accounts**
+
+![Admin accounts page](docs/admin.png)
+
 The login page keeps the three.js 3D scene:
 
 ![Login page with the 3D scene](docs/login.png)
@@ -24,6 +28,14 @@ The login page keeps the three.js 3D scene:
 - **Weekend requests**: approve or decline comp-off or overtime pay, or suggest an alternative (for example "take a comp-off day instead of pay").
 - **AI summary** for any person over 7, 14 or 30 days.
 - **Notifications** for new blockers, deadline risks, replies, weekend requests and epics marked done.
+
+**Admins**
+- Everything a manager can do, plus an **Accounts** page listing every login, from interns to managers and other admins.
+- **Add** an account with name, email, position (for example *Intern*), team, access level (employee, manager or admin) and a generated temporary password.
+- **Edit** anyone's name, login email, position, team or access level.
+- **Reset a password**. The new one is shown once so you can share it.
+- **Deactivate** ("delete") after a confirmation: the person can't log in and drops out of lists, pickers and alerts, but their history stays. Reactivate any time.
+- Safety rules: there is always at least one active admin, you can't deactivate yourself or remove your own admin access, and managers can't change admin accounts.
 
 **Employees**
 - **My day**: write the daily update for any workday using the calendar, link it to an epic, add hours and blockers, and attach photos or files. The work week is Monday to Friday: the page shows *x/5 workdays logged* and hours this week, with no streaks.
@@ -51,7 +63,8 @@ daily-update-website/
 
 ```
 Browser ──► frontend (nginx: React build + API gateway, :8080)
-              ├── /api/auth, /api/users, /api/teams   ──► auth-service     (:4001)
+              ├── /api/auth, /api/users, /api/teams,  ──► auth-service     (:4001)
+              │   /api/admin
               ├── /api/logs                           ──► worklog-service  (:4002)
               ├── /api/summaries                      ──► summary-service  (:4003) ──► Claude API
               └── /api/epics, /api/issues,            ──► project-service  (:4004) ──► uploads volume
@@ -64,7 +77,7 @@ Browser ──► frontend (nginx: React build + API gateway, :8080)
 | Service | Owns | Notes |
 |---|---|---|
 | frontend | React app | nginx serves the build, routes `/api/*` to the right service and sets security headers |
-| auth-service | `users`, `teams` tables | Sign-up, login, roles, positions, teams, first manager seeded from `.env` |
+| auth-service | `users`, `teams` tables | Sign-up, login, roles (employee, manager, admin), positions, teams, deactivation, first admin and manager seeded from `.env` |
 | worklog-service | `work_logs` table | One entry per employee per day, optionally linked to an epic; a new blocker becomes an alert |
 | summary-service | `summaries` table | Fetches logs from worklog-service, asks Claude to summarize, saves the result |
 | project-service | `epics`, `epic_members`, `issues`, `issue_replies`, `weekend_requests`, `notifications`, `attachments` | Epics and their health, blockers with replies, in-app notifications, comp-off/paid requests, file uploads |
@@ -83,6 +96,7 @@ Export your model from Blender as **glTF Binary** (`.glb`, no Draco compression)
 - Passwords hashed with BCrypt (cost 12). Login gives the same error, in the same time, for an unknown email and a wrong password.
 - Signed JWT login tokens (HS256, 8 hour expiry) checked by Spring Security in every service; stateless, no cookies.
 - Role rules: employees can only read and change their own logs, issues and requests, and only see epics they are on; only managers can list people, change teams, positions and roles, manage epics, read other people's logs, decide requests and generate summaries. Self sign-up always creates an employee.
+- Admins hold the manager role too. Deactivated accounts can't log in, and an open website tab signs out the next time it loads or regains focus; a login token already issued keeps working at the API until it expires (8 hours by default, `JWT_TTL_HOURS`).
 - Uploads: at most 10 MB, type checked from the file's first bytes against an allow list (images, PDF, text, CSV, Office documents, ZIP), stored under a random name outside the web root, and served only to the uploader, managers, and the person whose issue they belong to, with `nosniff` and a sandboxing CSP.
 - Rate limits on login and sign-up (20 per 15 minutes per IP) and on AI summaries (30 per hour per manager).
 - All SQL is parameterized; requests are validated and errors never expose internals.
@@ -102,10 +116,11 @@ cd daily-update-website
 ./config/setup.sh
 ```
 
-`setup.sh` creates `config/.env` and fills in random values for `POSTGRES_PASSWORD`, `JWT_SECRET` and the first manager's password, then prints the manager login. Running it again never overwrites values you've set.
+`setup.sh` creates `config/.env` and fills in random values for `POSTGRES_PASSWORD`, `JWT_SECRET` and the first admin's and manager's passwords, then prints both logins. On an older `config/.env` it adds the admin settings. Running it again never overwrites values you've set.
 
 Optionally, edit `config/.env`:
 
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD`: the first admin account, created on first start if there is no admin yet
 - `MANAGER_EMAIL` / `MANAGER_PASSWORD`: the first manager account, created on first start
 - `ANTHROPIC_API_KEY`: your Anthropic API key for AI summaries (get one at [console.anthropic.com](https://console.anthropic.com)). Without it the app still works and shows a basic, non-AI summary.
 
@@ -117,7 +132,7 @@ Then build and start everything (the first build downloads Maven and npm package
 docker compose -f config/docker-compose.yml up -d --build
 ```
 
-Open http://localhost:8080. Log in as the manager from `config/.env`, or use **Sign up** to create employee accounts.
+Open http://localhost:8080. Log in as the admin or manager from `config/.env`, or use **Sign up** to create employee accounts.
 
 Stop with `docker compose -f config/docker-compose.yml down` (add `-v` to also delete the database).
 
@@ -153,7 +168,11 @@ All endpoints except sign-up and login need `Authorization: Bearer <token>`. Err
 | GET | `/api/users?all=true` | manager | List employees (or everyone) |
 | GET | `/api/users/{id}` | manager | One user |
 | POST | `/api/users` | manager | Create an employee or manager with team and position |
-| PATCH | `/api/users/{id}` `{team, position, role}` | manager | Move teams, promote, change role |
+| PATCH | `/api/users/{id}` `{team, position, role}` | manager | Move teams, promote, change role (not on admins) |
+| GET / POST | `/api/admin/users` | admin | Every account, including deactivated / create any account |
+| PATCH | `/api/admin/users/{id}` `{name, email, team, position, role}` | admin | Edit an account, including the login email |
+| POST | `/api/admin/users/{id}/password` `{password}` | admin | Set a new password |
+| DELETE / POST | `/api/admin/users/{id}`, `/api/admin/users/{id}/activate` | admin | Deactivate / reactivate (history is kept) |
 | GET / POST | `/api/teams` | any user / manager | List teams with member counts / add a team |
 | POST | `/api/logs` `{workDate, tasks, hours, blockers, epicId, attachmentIds}` | any user | Create or update the caller's log for a date; a new blocker alerts managers |
 | GET | `/api/logs/me?from=&to=` | any user | Caller's logs (default last 30 days) |
@@ -184,6 +203,7 @@ All endpoints except sign-up and login need `Authorization: Bearer <token>`. Err
 | `APP_PORT` | `8080` | Port the website is published on |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `dailyupdate` / required / `dailyupdate` | Database |
 | `JWT_SECRET` | required | All services |
+| `ADMIN_NAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | unset | auth-service, first-run admin |
 | `MANAGER_NAME` / `MANAGER_EMAIL` / `MANAGER_PASSWORD` | unset | auth-service, first-run manager |
 | `ANTHROPIC_API_KEY` | unset | summary-service |
 | `ANTHROPIC_MODEL` | `claude-opus-5-5` | summary-service |

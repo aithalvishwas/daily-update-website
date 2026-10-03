@@ -61,13 +61,18 @@ public class AuthController {
             // Same answer for unknown email and wrong password so accounts can't be discovered.
             throw new ApiException(401, "Invalid email or password");
         }
+        if (!user.get().active()) {
+            throw new ApiException(403, "This account has been deactivated. Ask your admin.");
+        }
         return session(user.get());
     }
 
     @GetMapping("/me")
     public Map<String, Object> me() {
         AuthUser current = SecuritySupport.currentUser();
-        User user = users.findById(current.id()).orElseThrow(() -> new ApiException(404, "User not found"));
+        // The website checks this on load, so a deactivated account is signed out right away.
+        User user = users.findById(current.id()).filter(User::active)
+                .orElseThrow(() -> new ApiException(401, "This account is no longer active"));
         return Map.of("user", user.toPublic());
     }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ROLE_LABEL } from '../format.js';
 import Avatar from './Avatar.jsx';
 import Icon from './Icon.jsx';
 import NotificationBell from './NotificationBell.jsx';
@@ -22,7 +23,7 @@ const NAV = {
 /** Work-app layout: navy sidebar on the left, header with alerts on top. */
 export default function Shell({ user, token, section, counts = {}, onSignOut, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const nav = NAV[user.role] ?? NAV.employee;
+  const nav = user.role === 'admin' ? [...NAV.manager, ['admin', 'Accounts', 'shield']] : NAV[user.role] ?? NAV.employee;
 
   return (
     <div className={`shell ${menuOpen ? 'menu-open' : ''}`}>
@@ -63,7 +64,7 @@ export default function Shell({ user, token, section, counts = {}, onSignOut, ch
             <Avatar name={user.name} size={34} />
             <div className="header-name">
               <strong>{user.name}</strong>
-              <span className="muted small">{user.position || (user.role === 'manager' ? 'Manager' : 'Employee')}</span>
+              <span className="muted small">{user.position || ROLE_LABEL[user.role]}</span>
             </div>
           </div>
           <button type="button" className="icon-btn" onClick={onSignOut} aria-label="Log out" title="Log out">

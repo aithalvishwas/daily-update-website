@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS teams (
     name       VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('employee', 'manager', 'admin'));
 INSERT INTO teams (name)
     SELECT DISTINCT team FROM users WHERE team IS NOT NULL
     ON CONFLICT (name) DO NOTHING;

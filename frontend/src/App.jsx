@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { isManager } from './format.js';
 import { api, loadSession, saveSession, setUnauthorizedHandler } from './api.js';
 import { useRoute } from './router.js';
 import { ToastProvider } from './components/Toast.jsx';
@@ -10,6 +11,7 @@ import Epics from './pages/Epics.jsx';
 import People from './pages/People.jsx';
 import Issues from './pages/Issues.jsx';
 import Requests from './pages/Requests.jsx';
+import Admin from './pages/Admin.jsx';
 
 // Sidebar badges: what is waiting for this person.
 function useCounts(session, path) {
@@ -22,9 +24,9 @@ function useCounts(session, path) {
         api('/api/issues?status=open', { token }),
         api('/api/weekend-requests', { token }),
       ]);
-      const waiting = user.role === 'manager' ? 'pending' : 'alternative';
+      const waiting = isManager(user) ? 'pending' : 'alternative';
       setCounts({
-        issues: user.role === 'manager' ? issues.issues.length : 0,
+        issues: isManager(user) ? issues.issues.length : 0,
         requests: requests.requests.filter((r) => r.status === waiting).length,
       });
     } catch {
@@ -43,7 +45,7 @@ function useCounts(session, path) {
 
 function Page({ session, path }) {
   const { token, user } = session;
-  const manager = user.role === 'manager';
+  const manager = isManager(user);
   const [section, id] = path;
   switch (section) {
     case 'epics':
@@ -54,6 +56,8 @@ function Page({ session, path }) {
       return <Issues token={token} user={user} id={id} />;
     case 'requests':
       return <Requests token={token} user={user} id={id} />;
+    case 'admin':
+      return user.role === 'admin' ? <Admin token={token} user={user} /> : <ManagerHome token={token} user={user} />;
     default:
       return manager ? <ManagerHome token={token} user={user} /> : <EmployeeHome token={token} user={user} />;
   }
@@ -76,6 +80,32 @@ export default function App() {
   }, []);
 
   useEffect(() => setUnauthorizedHandler(signOut), [signOut]);
+
+  // Re-read the account on load and when the tab regains focus: picks up a new team or position,
+  // and signs out an account whose role changed or that an admin deactivated (the API answers 401).
+  const token = session?.token;
+  useEffect(() => {
+    if (!token) return undefined;
+    const refresh = () =>
+      api('/api/auth/me', { token })
+        .then(({ user }) =>
+          setSession((current) => {
+            if (!current || current.token !== token) return current;
+            // A new role needs a new login token; ask the person to log in again.
+            if (current.user.role !== user.role) {
+              saveSession(null);
+              return null;
+            }
+            const next = { ...current, user };
+            saveSession(next);
+            return next;
+          }),
+        )
+        .catch(() => {});
+    refresh();
+    window.addEventListener('focus', refresh);
+    return () => window.removeEventListener('focus', refresh);
+  }, [token]);
 
   return (
     <ToastProvider>

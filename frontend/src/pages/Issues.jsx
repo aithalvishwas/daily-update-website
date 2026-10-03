@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api.js';
-import { timeAgo } from '../format.js';
+import { isManager, timeAgo } from '../format.js';
 import { announceChange, useLoad } from '../hooks.js';
 import { navigate } from '../router.js';
 import { AttachmentList, AttachmentPicker } from '../components/Attachments.jsx';
@@ -171,10 +171,10 @@ function IssueDetail({ token, user, id, onChanged }) {
         {replies.map(({ reply: r, attachments: a }) => (
           <div key={r.id} className={`bubble-row ${r.authorId === user.id ? 'mine' : ''}`}>
             <Avatar name={r.authorName} size={30} />
-            <div className={`bubble ${r.authorRole === 'manager' ? 'bubble-manager' : ''}`}>
+            <div className={`bubble ${r.authorRole !== 'employee' ? 'bubble-manager' : ''}`}>
               <div className="bubble-head">
                 <strong>{r.authorName}</strong>
-                {r.authorRole === 'manager' && <span className="muted small">Manager</span>}
+                {r.authorRole !== 'employee' && <span className="muted small">{r.authorRole === 'admin' ? 'Admin' : 'Manager'}</span>}
                 <span className="muted small">{timeAgo(r.createdAt)}</span>
               </div>
               <p className="pre">{r.body}</p>
@@ -191,7 +191,7 @@ function IssueDetail({ token, user, id, onChanged }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={5000}
-          placeholder={user.role === 'manager' ? `Reply to ${issue.raisedByName.split(' ')[0]}…` : 'Add more detail or reply…'}
+          placeholder={isManager(user) ? `Reply to ${issue.raisedByName.split(' ')[0]}…` : 'Add more detail or reply…'}
           required
           aria-label="Reply"
         />
@@ -207,7 +207,7 @@ function IssueDetail({ token, user, id, onChanged }) {
 }
 
 export default function Issues({ token, user, id }) {
-  const manager = user.role === 'manager';
+  const manager = isManager(user);
   const [status, setStatus] = useState('open');
   const [issues, reload] = useLoad(
     () => api(`/api/issues${status === 'all' ? '' : `?status=${status}`}`, { token }).then((d) => d.issues),
