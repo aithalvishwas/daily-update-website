@@ -2,7 +2,15 @@ name: daily-update
 
 x-service-env: &service-env
   JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
-  DATABASE_URL: postgres://${POSTGRES_USER:-dailyupdate}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-dailyupdate}
+  DATABASE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-dailyupdate}
+  DATABASE_USER: ${POSTGRES_USER:-dailyupdate}
+  DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+
+x-java-service: &java-service
+  restart: unless-stopped
+  depends_on:
+    db: { condition: service_healthy }
+  networks: [backend]
 
 services:
   db:
@@ -22,31 +30,49 @@ services:
     networks: [backend]
 
   auth-service:
-    build: ../backend/auth-service
-    restart: unless-stopped
+    <<: *java-service
+    build:
+      context: ../backend
+      args: { SERVICE: auth-service }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4001/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     environment:
       <<: *service-env
       PORT: 4001
       MANAGER_NAME: ${MANAGER_NAME:-Manager}
       MANAGER_EMAIL: ${MANAGER_EMAIL:-}
       MANAGER_PASSWORD: ${MANAGER_PASSWORD:-}
-    depends_on:
-      db: { condition: service_healthy }
-    networks: [backend]
 
   worklog-service:
-    build: ../backend/worklog-service
-    restart: unless-stopped
+    <<: *java-service
+    build:
+      context: ../backend
+      args: { SERVICE: worklog-service }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4002/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     environment:
       <<: *service-env
       PORT: 4002
-    depends_on:
-      db: { condition: service_healthy }
-    networks: [backend]
 
   summary-service:
-    build: ../backend/summary-service
-    restart: unless-stopped
+    <<: *java-service
+    build:
+      context: ../backend
+      args: { SERVICE: summary-service }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4003/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     environment:
       <<: *service-env
       PORT: 4003
@@ -54,16 +80,16 @@ services:
       WORKLOG_SERVICE_URL: http://worklog-service:4002
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
-    depends_on:
-      db: { condition: service_healthy }
-    networks: [backend]
 
   frontend:
     build: ../frontend
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8080}:8080"
-    depends_on: [auth-service, worklog-service, summary-service]
+    depends_on:
+      auth-service: { condition: service_healthy }
+      worklog-service: { condition: service_healthy }
+      summary-service: { condition: service_healthy }
     networks: [backend]
 
 volumes:
