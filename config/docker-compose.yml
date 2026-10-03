@@ -61,6 +61,7 @@ services:
     environment:
       <<: *service-env
       PORT: 4002
+      PROJECT_SERVICE_URL: http://project-service:4004
 
   summary-service:
     <<: *java-service
@@ -81,6 +82,25 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
 
+  project-service:
+    <<: *java-service
+    build:
+      context: ../backend
+      args: { SERVICE: project-service }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4004/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    environment:
+      <<: *service-env
+      PORT: 4004
+      AUTH_SERVICE_URL: http://auth-service:4001
+      UPLOADS_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+
   frontend:
     build: ../frontend
     restart: unless-stopped
@@ -90,10 +110,12 @@ services:
       auth-service: { condition: service_healthy }
       worklog-service: { condition: service_healthy }
       summary-service: { condition: service_healthy }
+      project-service: { condition: service_healthy }
     networks: [backend]
 
 volumes:
   db-data:
+  uploads:
 
 networks:
   backend:

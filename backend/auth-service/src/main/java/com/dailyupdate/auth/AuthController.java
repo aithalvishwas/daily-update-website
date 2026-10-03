@@ -47,7 +47,7 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> register(@Valid @RequestBody Requests.Register body, HttpServletRequest request) {
         limit(request);
-        User user = userService.create(body.name(), body.email(), body.password(), body.team(), AuthUser.EMPLOYEE);
+        User user = userService.create(body.name(), body.email(), body.password(), body.team(), body.position(), AuthUser.EMPLOYEE);
         return session(user);
     }
 

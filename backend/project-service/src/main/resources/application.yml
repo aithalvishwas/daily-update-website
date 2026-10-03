@@ -1,10 +1,10 @@
 server:
-  port: ${PORT:4002}
+  port: ${PORT:4004}
   error:
     include-message: never
 spring:
   application:
-    name: worklog-service
+    name: project-service
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USER}
@@ -14,14 +14,19 @@ spring:
       mode: always
   jackson:
     default-property-inclusion: always
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
 app:
   jwt:
     secret: ${JWT_SECRET:}
     ttl-hours: ${JWT_TTL_HOURS:8}
+  uploads-dir: ${UPLOADS_DIR:/data/uploads}
+services:
+  auth-url: ${AUTH_SERVICE_URL:http://auth-service:4001}
 management:
   endpoints:
     web:
       exposure:
         include: health
-services:
-  project-url: ${PROJECT_SERVICE_URL:http://localhost:4004}

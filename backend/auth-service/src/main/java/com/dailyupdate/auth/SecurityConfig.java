@@ -19,7 +19,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
-                        .requestMatchers("/api/users/**", "/api/users").hasRole("MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/users/managers", "/api/teams").authenticated()
+                        .requestMatchers("/api/users/**", "/api/users", "/api/teams").hasRole("MANAGER")
                         .anyRequest().authenticated())
                 .build();
     }

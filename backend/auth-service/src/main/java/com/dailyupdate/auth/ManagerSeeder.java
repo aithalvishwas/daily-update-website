@@ -40,7 +40,7 @@ public class ManagerSeeder implements ApplicationRunner {
             log.warn("MANAGER_PASSWORD is shorter than 8 characters; skipping manager seed");
             return;
         }
-        userService.create(name, email, password, null, AuthUser.MANAGER);
+        userService.create(name, email, password, null, "Manager", AuthUser.MANAGER);
         log.info("Seeded manager account {}", email);
     }
 }

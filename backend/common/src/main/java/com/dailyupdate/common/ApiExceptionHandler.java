@@ -6,10 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** Turns exceptions into {"error": "..."} JSON without leaking internals. */
@@ -37,6 +41,26 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     ResponseEntity<Map<String, String>> mismatch(MethodArgumentTypeMismatchException e) {
         return error(400, "Invalid value for " + e.getName());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    ResponseEntity<Map<String, String>> missingParam(MissingServletRequestParameterException e) {
+        return error(400, "Missing " + e.getParameterName());
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    ResponseEntity<Map<String, String>> missingPart(MissingServletRequestPartException e) {
+        return error(400, "Choose a file to upload");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<Map<String, String>> tooLarge(MaxUploadSizeExceededException e) {
+        return error(413, "Files can be at most 10 MB");
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    ResponseEntity<Map<String, String>> notMultipart(MultipartException e) {
+        return error(400, "Send the file as a multipart upload");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

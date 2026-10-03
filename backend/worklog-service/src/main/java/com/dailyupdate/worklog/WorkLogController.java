@@ -9,6 +9,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -27,18 +29,21 @@ public class WorkLogController {
 
     private static final int MAX_TEXT = 5000;
 
-    public record SaveRequest(String workDate, String tasks, BigDecimal hours, String blockers) {}
+    public record SaveRequest(String workDate, String tasks, BigDecimal hours, String blockers, Long epicId,
+            List<Long> attachmentIds) {}
 
     private final WorkLogRepository logs;
+    private final ProjectClient projects;
 
-    public WorkLogController(WorkLogRepository logs) {
+    public WorkLogController(WorkLogRepository logs, ProjectClient projects) {
         this.logs = logs;
+        this.projects = projects;
     }
 
     /** Create or update the caller's log for a day. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, Object> save(@RequestBody SaveRequest body) {
+    public Map<String, Object> save(@RequestBody SaveRequest body, @RequestHeader("Authorization") String auth) {
         AuthUser user = SecuritySupport.currentUser();
         LocalDate date = body.workDate() == null || body.workDate().isBlank()
                 ? today()
@@ -59,7 +64,20 @@ public class WorkLogController {
         if (hours != null && (hours.signum() < 0 || hours.compareTo(BigDecimal.valueOf(24)) > 0)) {
             throw new ApiException(400, "Hours must be between 0 and 24");
         }
-        WorkLog saved = logs.upsert(user.id(), user.name(), date, tasks, hours, blockers.isEmpty() ? null : blockers);
+        ProjectClient.EpicRef epic = null;
+        if (body.epicId() != null) {
+            epic = projects.epic(body.epicId(), auth)
+                    .orElseThrow(() -> new ApiException(400, "You are not on that epic"));
+        }
+        List<Long> attachmentIds = body.attachmentIds() == null ? List.of()
+                : body.attachmentIds().stream().filter(Objects::nonNull).distinct().limit(10).toList();
+        String previousBlockers = logs.findOwn(user.id(), date).map(WorkLog::blockers).orElse(null);
+        WorkLog saved = logs.upsert(user.id(), user.name(), date, tasks, hours, blockers.isEmpty() ? null : blockers,
+                epic == null ? null : epic.id(), epic == null ? null : epic.name(), attachmentIds);
+        // A new or changed blocker becomes an alert for the managers.
+        if (!blockers.isEmpty() && !blockers.equals(previousBlockers)) {
+            projects.raiseBlocker(blockers, saved.epicId(), auth);
+        }
         return Map.of("log", saved);
     }
 
@@ -90,6 +108,14 @@ public class WorkLogController {
             @RequestParam(required = false) String from, @RequestParam(required = false) String to) {
         LocalDate[] range = range(from, to);
         return Map.of("logs", logs.findForUser(userId, range[0], range[1]));
+    }
+
+    /** Managers: daily updates linked to an epic. */
+    @GetMapping("/epic/{epicId}")
+    public Map<String, List<WorkLog>> forEpic(@PathVariable long epicId,
+            @RequestParam(required = false) String from, @RequestParam(required = false) String to) {
+        LocalDate[] range = range(from, to);
+        return Map.of("logs", logs.findForEpic(epicId, range[0], range[1]));
     }
 
     /** Reads ?from=&to= with a default window of the last 30 days. */

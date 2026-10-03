@@ -7,3 +7,12 @@ CREATE TABLE IF NOT EXISTS users (
     team          VARCHAR(100),
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE users ADD COLUMN IF NOT EXISTS position VARCHAR(100);
+CREATE TABLE IF NOT EXISTS teams (
+    id         BIGSERIAL PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+INSERT INTO teams (name)
+    SELECT DISTINCT team FROM users WHERE team IS NOT NULL
+    ON CONFLICT (name) DO NOTHING;

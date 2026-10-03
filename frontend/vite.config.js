@@ -10,8 +10,14 @@ export default defineConfig({
     proxy: {
       '/api/auth': service(4001),
       '/api/users': service(4001),
+      '/api/teams': service(4001),
       '/api/logs': service(4002),
       '/api/summaries': service(4003),
+      '/api/epics': service(4004),
+      '/api/issues': service(4004),
+      '/api/weekend-requests': service(4004),
+      '/api/notifications': service(4004),
+      '/api/attachments': service(4004),
     },
   },
   build: {

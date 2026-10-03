@@ -39,6 +39,15 @@ public final class SecuritySupport {
         return user;
     }
 
+    /** The signed-in user, who must be a manager. */
+    public static AuthUser requireManager() {
+        AuthUser user = currentUser();
+        if (!user.isManager()) {
+            throw new ApiException(403, "Forbidden");
+        }
+        return user;
+    }
+
     private static void writeError(HttpServletResponse res, int status, String message) throws IOException {
         res.setStatus(status);
         res.setContentType("application/json");
