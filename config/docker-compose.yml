@@ -22,7 +22,7 @@ services:
     networks: [backend]
 
   auth-service:
-    build: ./services/auth-service
+    build: ../backend/auth-service
     restart: unless-stopped
     environment:
       <<: *service-env
@@ -35,7 +35,7 @@ services:
     networks: [backend]
 
   worklog-service:
-    build: ./services/worklog-service
+    build: ../backend/worklog-service
     restart: unless-stopped
     environment:
       <<: *service-env
@@ -45,7 +45,7 @@ services:
     networks: [backend]
 
   summary-service:
-    build: ./services/summary-service
+    build: ../backend/summary-service
     restart: unless-stopped
     environment:
       <<: *service-env
@@ -59,7 +59,7 @@ services:
     networks: [backend]
 
   frontend:
-    build: ./frontend
+    build: ../frontend
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8080}:8080"

@@ -20,6 +20,16 @@ A web app where employees log the work they did each day, and managers log in to
 - Generate an AI summary for the last 7, 14 or 30 days (overview, key accomplishments, blockers and risks, time, suggested follow-ups)
 - Create employee or manager accounts
 
+## Project layout
+
+```
+daily-update-website/
+├── frontend/   Website (HTML, CSS, JS) and the nginx gateway
+├── backend/    Microservices: auth-service, worklog-service, summary-service
+├── config/     docker-compose.yml and .env.example
+└── docs/       Screenshots
+```
+
 ## Architecture
 
 The app is split into small services, each owning its own data, behind one gateway.
@@ -36,9 +46,9 @@ Browser ──► frontend (nginx: static site + API gateway, :8080)
 | Service | Folder | Owns | Notes |
 |---|---|---|---|
 | frontend | `frontend/` | Static HTML/CSS/JS | nginx also routes `/api/*` to the right service and sets security headers |
-| auth-service | `services/auth-service/` | `users` table | Sign-up, login, roles, employee list |
-| worklog-service | `services/worklog-service/` | `work_logs` table | One entry per employee per day |
-| summary-service | `services/summary-service/` | `summaries` table | Fetches logs from worklog-service, asks Claude to summarize, saves the result |
+| auth-service | `backend/auth-service/` | `users` table | Sign-up, login, roles, employee list |
+| worklog-service | `backend/worklog-service/` | `work_logs` table | One entry per employee per day |
+| summary-service | `backend/summary-service/` | `summaries` table | Fetches logs from worklog-service, asks Claude to summarize, saves the result |
 | db | (docker image) | PostgreSQL 17 | Each service creates its own tables on start |
 
 Services are Node.js 22 + Express. The summary-service calls the other services with the manager's own login token, so every service checks permissions itself.
@@ -52,7 +62,7 @@ Services are Node.js 22 + Express. The summary-service calls the other services 
 - All SQL is parameterized; request bodies are size-limited and validated.
 - Helmet security headers on every service, plus a strict Content Security Policy, `X-Frame-Options: DENY` and `nosniff` from nginx. The frontend never renders user text as HTML.
 - Employee text sent to the AI is wrapped as data and the model is told never to follow instructions inside it.
-- Only the frontend port is published; the database and services are on a private Docker network. Secrets come from `.env`, which is git-ignored.
+- Only the frontend port is published; the database and services are on a private Docker network. Secrets come from `config/.env`, which is git-ignored.
 
 For production, put the site behind HTTPS (for example a reverse proxy or load balancer with a TLS certificate).
 
@@ -63,10 +73,10 @@ You need [Docker](https://docs.docker.com/get-docker/) with Docker Compose.
 ```bash
 git clone https://github.com/aithalvishwas/daily-update-website.git
 cd daily-update-website
-cp .env.example .env
+cp config/.env.example config/.env
 ```
 
-Edit `.env`:
+Edit `config/.env`:
 
 - `POSTGRES_PASSWORD`: any long random password
 - `JWT_SECRET`: at least 32 characters, e.g. the output of `openssl rand -hex 32`
@@ -76,12 +86,12 @@ Edit `.env`:
 Then start everything:
 
 ```bash
-docker compose up -d --build
+docker compose -f config/docker-compose.yml up -d --build
 ```
 
-Open http://localhost:8080. Log in as the manager from `.env`, or use **Sign up** to create employee accounts.
+Open http://localhost:8080. Log in as the manager from `config/.env`, or use **Sign up** to create employee accounts.
 
-Stop with `docker compose down` (add `-v` to also delete the database).
+Stop with `docker compose -f config/docker-compose.yml down` (add `-v` to also delete the database).
 
 ## API
 
