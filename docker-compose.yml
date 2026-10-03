@@ -1,0 +1,73 @@
+name: daily-update
+
+x-service-env: &service-env
+  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+  DATABASE_URL: postgres://${POSTGRES_USER:-dailyupdate}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-dailyupdate}
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dailyupdate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-dailyupdate}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
+
+  auth-service:
+    build: ./services/auth-service
+    restart: unless-stopped
+    environment:
+      <<: *service-env
+      PORT: 4001
+      MANAGER_NAME: ${MANAGER_NAME:-Manager}
+      MANAGER_EMAIL: ${MANAGER_EMAIL:-}
+      MANAGER_PASSWORD: ${MANAGER_PASSWORD:-}
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [backend]
+
+  worklog-service:
+    build: ./services/worklog-service
+    restart: unless-stopped
+    environment:
+      <<: *service-env
+      PORT: 4002
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [backend]
+
+  summary-service:
+    build: ./services/summary-service
+    restart: unless-stopped
+    environment:
+      <<: *service-env
+      PORT: 4003
+      AUTH_SERVICE_URL: http://auth-service:4001
+      WORKLOG_SERVICE_URL: http://worklog-service:4002
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [backend]
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on: [auth-service, worklog-service, summary-service]
+    networks: [backend]
+
+volumes:
+  db-data:
+
+networks:
+  backend:

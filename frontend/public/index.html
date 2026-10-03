@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Update</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Daily Update</div>
+    <div id="session" class="session" hidden>
+      <span id="session-name"></span>
+      <span id="session-role" class="badge"></span>
+      <button id="logout" class="btn btn-ghost" type="button">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <!-- Login / sign-up -->
+    <section id="view-auth" class="view" hidden>
+      <div class="card auth-card">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="login" type="button" role="tab">Log in</button>
+          <button class="tab" data-tab="register" type="button" role="tab">Sign up</button>
+        </div>
+
+        <form id="login-form" class="form">
+          <label>Email <input name="email" type="email" autocomplete="email" required></label>
+          <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="btn" type="submit">Log in</button>
+        </form>
+
+        <form id="register-form" class="form" hidden>
+          <label>Full name <input name="name" maxlength="100" autocomplete="name" required></label>
+          <label>Email <input name="email" type="email" autocomplete="email" required></label>
+          <label>Team (optional) <input name="team" maxlength="100"></label>
+          <label>Password <input name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+          <button class="btn" type="submit">Create employee account</button>
+          <p class="hint">Manager accounts are created by an existing manager.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Employee -->
+    <section id="view-employee" class="view" hidden>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Log today's work</h2>
+          <form id="log-form" class="form">
+            <label>Date <input name="workDate" type="date" required></label>
+            <label>What did you work on?
+              <textarea name="tasks" rows="7" maxlength="5000" required
+                placeholder="- Fixed the login bug&#10;- Reviewed 2 pull requests&#10;- Met with the design team"></textarea>
+            </label>
+            <label>Hours worked (optional) <input name="hours" type="number" min="0" max="24" step="0.5"></label>
+            <label>Blockers (optional) <textarea name="blockers" rows="3" maxlength="5000"></textarea></label>
+            <button class="btn" type="submit">Save update</button>
+            <p class="hint">Saving again for the same date updates that day's entry.</p>
+          </form>
+        </div>
+        <div class="card">
+          <h2>My recent updates</h2>
+          <ul id="my-logs" class="log-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Manager -->
+    <section id="view-manager" class="view" hidden>
+      <div class="grid-manager">
+        <aside class="card">
+          <div class="row-between">
+            <h2>Employees</h2>
+            <button id="toggle-add-user" class="btn btn-ghost" type="button">+ Add</button>
+          </div>
+          <form id="add-user-form" class="form compact" hidden>
+            <label>Name <input name="name" maxlength="100" required></label>
+            <label>Email <input name="email" type="email" required></label>
+            <label>Team <input name="team" maxlength="100"></label>
+            <label>Temporary password <input name="password" type="password" minlength="8" maxlength="128" required></label>
+            <label>Role
+              <select name="role"><option value="employee">Employee</option><option value="manager">Manager</option></select>
+            </label>
+            <button class="btn" type="submit">Create account</button>
+          </form>
+          <input id="employee-search" class="search" type="search" placeholder="Search employees" aria-label="Search employees">
+          <ul id="employee-list" class="employee-list"></ul>
+        </aside>
+
+        <div id="employee-detail" class="card">
+          <p class="empty">Select an employee to see their AI summary and daily updates.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <template id="employee-detail-template">
+    <div class="row-between">
+      <div>
+        <h2 class="detail-name"></h2>
+        <p class="muted detail-meta"></p>
+      </div>
+    </div>
+    <div class="summary-box">
+      <div class="row-between">
+        <h3>AI summary</h3>
+        <div class="summary-actions">
+          <select class="summary-days" aria-label="Summary period">
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30">Last 30 days</option>
+          </select>
+          <button class="btn generate" type="button">Generate summary</button>
+        </div>
+      </div>
+      <p class="muted summary-meta"></p>
+      <div class="summary-text"></div>
+    </div>
+    <h3>Daily updates (last 30 days)</h3>
+    <ul class="log-list detail-logs"></ul>
+  </template>
+</body>
+</html>
