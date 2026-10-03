@@ -42,7 +42,7 @@ function Blob() {
   return (
     <mesh scale={1.55}>
       <icosahedronGeometry args={[1, 64]} />
-      <MeshDistortMaterial color="#7c5cff" emissive="#2a1470" roughness={0.08} metalness={0.25} distort={0.38} speed={1.6} />
+      <MeshDistortMaterial color="#2f6fe4" emissive="#0b2a6b" roughness={0.08} metalness={0.25} distort={0.38} speed={1.6} />
     </mesh>
   );
 }
@@ -57,7 +57,7 @@ function Orbiters({ count = 7 }) {
         radius: 2.5 + (i % 3) * 0.35,
         y: ((i % 4) - 1.5) * 0.55,
         size: 0.14 + (i % 3) * 0.06,
-        color: ['#22d3ee', '#a78bfa', '#f472b6', '#facc15'][i % 4],
+        color: ["#2dd4bf", "#60a5fa", "#34d399", "#fbbf24"][i % 4],
       })),
     [count],
   );
@@ -89,7 +89,7 @@ function Ring() {
   return (
     <mesh ref={ref} rotation={[1.1, 0, 0]}>
       <torusGeometry args={[2.15, 0.035, 16, 160]} />
-      <meshStandardMaterial color="#c4b5fd" emissive="#7c5cff" emissiveIntensity={0.8} metalness={0.6} roughness={0.2} />
+      <meshStandardMaterial color="#99f6e4" emissive="#14b8a6" emissiveIntensity={0.8} metalness={0.6} roughness={0.2} />
     </mesh>
   );
 }
@@ -119,7 +119,7 @@ export default function Scene3D() {
     >
       <ambientLight intensity={0.35} />
       <directionalLight position={[4, 5, 3]} intensity={1.4} />
-      <pointLight position={[-4, -2, 2]} intensity={30} color="#22d3ee" />
+      <pointLight position={[-4, -2, 2]} intensity={30} color="#2dd4bf" />
       <Suspense fallback={null}>
         <Parallax>
           <group position={[0.4, 1.1, 0]} scale={0.85}>
@@ -129,13 +129,13 @@ export default function Scene3D() {
             <Ring />
             <Orbiters />
           </group>
-          <Sparkles count={60} scale={[9, 6, 4]} size={2.2} speed={reduced ? 0 : 0.35} color="#c4b5fd" />
+          <Sparkles count={60} scale={[9, 6, 4]} size={2.2} speed={reduced ? 0 : 0.35} color="#bfdbfe" />
         </Parallax>
         {/* Studio lighting built in code, so nothing is downloaded at runtime. */}
         <Environment resolution={256}>
-          <Lightformer intensity={2} position={[0, 4, -6]} scale={[10, 2, 1]} color="#a78bfa" />
-          <Lightformer intensity={1.5} position={[-5, 0, -2]} scale={[2, 6, 1]} color="#22d3ee" />
-          <Lightformer intensity={1} position={[5, -1, 0]} scale={[2, 4, 1]} color="#f472b6" />
+          <Lightformer intensity={2} position={[0, 4, -6]} scale={[10, 2, 1]} color="#60a5fa" />
+          <Lightformer intensity={1.5} position={[-5, 0, -2]} scale={[2, 6, 1]} color="#2dd4bf" />
+          <Lightformer intensity={1} position={[5, -1, 0]} scale={[2, 4, 1]} color="#34d399" />
         </Environment>
       </Suspense>
     </Canvas>

@@ -44,3 +44,24 @@ export async function api(path, { method = 'GET', body, token } = {}) {
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
 }
+
+/** Uploads one file and returns its attachment info. */
+export async function upload(file, token) {
+  const data = new FormData();
+  data.append('file', file);
+  const res = await fetch('/api/attachments', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: data });
+  if (res.status === 401) {
+    onUnauthorized();
+    throw new Error('Your session expired, please log in again');
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || `Upload failed (${res.status})`);
+  return json.attachment;
+}
+
+/** Downloads a protected file as a Blob (images can't send the login token by themselves). */
+export async function fetchBlob(path, token) {
+  const res = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error('Could not load the file');
+  return res.blob();
+}

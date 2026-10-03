@@ -4,10 +4,13 @@ import com.dailyupdate.common.ApiException;
 import com.dailyupdate.common.AuthUser;
 import com.dailyupdate.common.SecuritySupport;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/weekend-requests")
 public class WeekendRequestController {
+
+    private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.ENGLISH);
 
     public record SubmitRequest(String workDate, BigDecimal hours, String compensation, String reason) {}
 
@@ -64,13 +69,12 @@ public class WeekendRequestController {
         if (!"comp_off".equals(body.compensation()) && !"paid".equals(body.compensation())) {
             throw new ApiException(400, "Choose comp_off or paid");
         }
-        var saved = requests.submit(me.id(), me.name(), day, body.hours().setScale(1, java.math.RoundingMode.HALF_UP),
+        var saved = requests.submit(me.id(), me.name(), day, body.hours().setScale(1, RoundingMode.HALF_UP),
                 body.compensation(), EpicController.optionalText(body.reason(), 2000))
                 .orElseThrow(() -> new ApiException(409, "You already have a request for that day"));
         notifier.managers(auth, me.id(), "weekend_request",
-                me.name() + " asks for " + label(saved.compensation()) + " for " + day.getDayOfWeek().toString().charAt(0)
-                        + day.getDayOfWeek().toString().substring(1).toLowerCase() + " " + day,
-                saved.hours() + " hours" + (saved.reason() == null ? "" : ": " + saved.reason()),
+                me.name() + " asks for " + label(saved.compensation()) + " for " + DAY.format(day),
+                hours(saved.hours()) + " hours" + (saved.reason() == null ? "" : ": " + saved.reason()),
                 "/requests/" + saved.id());
         return Map.of("request", saved);
     }
@@ -96,7 +100,7 @@ public class WeekendRequestController {
         if (!requests.decide(id, "pending", status, note, alternative, me.name())) {
             throw new ApiException(409, "This request has already been decided");
         }
-        String what = label(current.compensation()) + " for " + current.workDate();
+        String what = label(current.compensation()) + " for " + DAY.format(current.workDate());
         String title = switch (status) {
             case "approved" -> me.name() + " approved your " + what;
             case "rejected" -> me.name() + " declined your " + what;
@@ -117,7 +121,7 @@ public class WeekendRequestController {
             throw new ApiException(409, "There is no alternative to accept");
         }
         notifier.managers(auth, me.id(), "weekend_request",
-                me.name() + " accepted the alternative for " + current.workDate(), current.alternative(),
+                me.name() + " accepted the alternative for " + DAY.format(current.workDate()), current.alternative(),
                 "/requests/" + id);
         return Map.of("request", requests.findById(id).orElseThrow());
     }
@@ -136,6 +140,10 @@ public class WeekendRequestController {
     private WeekendRequestRepository.WeekendRequest owned(long id, AuthUser me) {
         return requests.findById(id).filter(r -> r.userId() == me.id())
                 .orElseThrow(() -> new ApiException(404, "Request not found"));
+    }
+
+    private static String hours(BigDecimal hours) {
+        return hours.stripTrailingZeros().toPlainString();
     }
 
     private static String label(String compensation) {

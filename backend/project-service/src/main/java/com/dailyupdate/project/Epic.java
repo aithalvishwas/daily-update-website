@@ -45,7 +45,7 @@ public record Epic(
 
     /**
      * done: finished. overdue: past the due date and not finished.
-     * at_risk: more than 15 points behind the time elapsed, or an open blocker.
+     * at_risk: more than 15 points behind the time elapsed, or an open blocker or deadline issue.
      * on_track: everything else.
      */
     static String health(Row row, LocalDate today, int expected) {

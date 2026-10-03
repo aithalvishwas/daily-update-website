@@ -7,9 +7,9 @@ import Logo from './Logo.jsx';
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
 
 const FEATURES = [
-  ['Log your day in a minute', 'What you did, hours and blockers.'],
-  ['AI writes the summary', 'Managers get a clear digest per person.'],
-  ['Private by role', 'Employees see their own work, managers see the team.'],
+  ['Epics and deadlines', 'See every epic, who is on it, and whether it is on track.'],
+  ['Blockers reach the manager', 'Raise an issue, get a reply, attach photos and files.'],
+  ['AI writes the summary', 'Managers get a clear digest of each person’s week.'],
 ];
 
 export default function AuthPage({ onSignedIn }) {
@@ -60,13 +60,13 @@ export default function AuthPage({ onSignedIn }) {
       </section>
 
       <section className="auth-panel">
-        <div className="glass auth-card">
+        <div className="card auth-card">
           <h2>{tab === 'login' ? 'Welcome back' : 'Create your account'}</h2>
           <p className="muted">
             {tab === 'login' ? 'Log in to post your update or review your team.' : 'Sign up as an employee to start logging.'}
           </p>
 
-          <div className="segmented" role="tablist">
+          <div className="tabs tabs-full" role="tablist">
             {['login', 'register'].map((t) => (
               <button
                 key={t}
@@ -93,10 +93,16 @@ export default function AuthPage({ onSignedIn }) {
               <input name="email" type="email" autoComplete="email" required />
             </label>
             {tab === 'register' && (
-              <label>
-                <span>Team <span className="optional">optional</span></span>
-                <input name="team" maxLength={100} />
-              </label>
+              <div className="form-grid">
+                <label>
+                  <span>Team <span className="optional">optional</span></span>
+                  <input name="team" maxLength={100} />
+                </label>
+                <label>
+                  <span>Position <span className="optional">optional</span></span>
+                  <input name="position" maxLength={100} />
+                </label>
+              </div>
             )}
             <label>
               Password

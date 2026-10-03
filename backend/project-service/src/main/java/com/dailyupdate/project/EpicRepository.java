@@ -15,7 +15,8 @@ public class EpicRepository {
 
     private static final String SELECT = """
             SELECT e.id, e.name, e.description, e.team, e.start_date, e.due_date, e.status, e.progress,
-                   CAST((SELECT COUNT(*) FROM issues i WHERE i.epic_id = e.id AND i.status = 'open') AS int) AS open_issues,
+                   CAST((SELECT COUNT(*) FROM issues i WHERE i.epic_id = e.id AND i.status = 'open'
+                           AND i.type IN ('blocker', 'deadline')) AS int) AS open_issues,
                    e.updated_at
             FROM epics e""";
 
