@@ -17,6 +17,8 @@ public class EpicRepository {
             SELECT e.id, e.name, e.description, e.team, e.start_date, e.due_date, e.status, e.progress,
                    CAST((SELECT COUNT(*) FROM issues i WHERE i.epic_id = e.id AND i.status = 'open'
                            AND i.type IN ('blocker', 'deadline')) AS int) AS open_issues,
+                   CAST((SELECT COUNT(*) FROM tasks t WHERE t.epic_id = e.id) AS int) AS tasks_total,
+                   CAST((SELECT COUNT(*) FROM tasks t WHERE t.epic_id = e.id AND t.status = 'done') AS int) AS tasks_done,
                    e.updated_at
             FROM epics e""";
 

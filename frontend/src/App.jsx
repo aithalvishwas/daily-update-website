@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { isManager } from './format.js';
+import { isManager, localToday } from './format.js';
 import { api, loadSession, saveSession, setUnauthorizedHandler } from './api.js';
 import { useRoute } from './router.js';
 import { ToastProvider } from './components/Toast.jsx';
@@ -15,6 +15,8 @@ import Admin from './pages/Admin.jsx';
 import WorkplaceSettings from './pages/WorkplaceSettings.jsx';
 import MySettings from './pages/MySettings.jsx';
 import Landing from './pages/Landing.jsx';
+import MyTasks from './pages/MyTasks.jsx';
+import Workload from './pages/Workload.jsx';
 import { OFFICES, WorkplaceContext } from './workplace.js';
 
 // Sidebar badges: what is waiting for this person.
@@ -24,14 +26,18 @@ function useCounts(session, path) {
     if (!session) return;
     const { token, user } = session;
     try {
-      const [issues, requests] = await Promise.all([
+      const [issues, requests, tasks] = await Promise.all([
         api('/api/issues?status=open', { token }),
         api('/api/weekend-requests', { token }),
+        api('/api/tasks/mine', { token }),
       ]);
+      const today = localToday();
       const waiting = isManager(user) ? 'pending' : 'alternative';
       setCounts({
         issues: isManager(user) ? issues.issues.length : 0,
         requests: requests.requests.filter((r) => r.status === waiting).length,
+        // Tasks due today or already late.
+        tasks: tasks.tasks.filter((t) => t.status !== 'done' && t.dueDate && t.dueDate <= today).length,
       });
     } catch {
       // Counters are a convenience; pages show their own errors.
@@ -56,6 +62,10 @@ function Page({ session, path, onUserChanged }) {
       return <Epics token={token} user={user} id={id} />;
     case 'people':
       return manager ? <People token={token} id={id} /> : <EmployeeHome token={token} user={user} />;
+    case 'tasks':
+      return <MyTasks token={token} user={user} id={id} />;
+    case 'workload':
+      return manager ? <Workload token={token} /> : <EmployeeHome token={token} user={user} />;
     case 'issues':
       return <Issues token={token} user={user} id={id} />;
     case 'requests':

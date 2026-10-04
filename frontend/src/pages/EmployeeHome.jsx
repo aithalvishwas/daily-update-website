@@ -7,6 +7,7 @@ import { Calendar, DatePicker } from '../components/Calendar.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { Badge, Empty, Skeleton, Stat } from '../components/ui.jsx';
+import { MyTasksCard } from '../components/Tasks.jsx';
 import { EpicCard } from './Epics.jsx';
 import { RaiseIssue } from './Issues.jsx';
 import { useWorkCalendar, useWorkplace } from '../workplace.js';
@@ -190,6 +191,7 @@ export default function EmployeeHome({ token, user }) {
         </form>
 
         <div className="stack">
+          <MyTasksCard token={token} />
           <section className="card">
             <h2 className="card-title">This week</h2>
             <ul className="week-strip" style={{ '--days': week.length }}>

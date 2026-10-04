@@ -18,6 +18,8 @@ public record Epic(
         int progress,
         List<Member> members,
         int openIssues,
+        int tasksTotal,
+        int tasksDone,
         String health,
         int expectedProgress,
         long daysLeft,
@@ -26,7 +28,8 @@ public record Epic(
     public record Member(long userId, String userName) {}
 
     public record Row(long id, String name, String description, String team, LocalDate startDate,
-            LocalDate dueDate, String status, int progress, int openIssues, OffsetDateTime updatedAt) {}
+            LocalDate dueDate, String status, int progress, int openIssues, int tasksTotal, int tasksDone,
+            OffsetDateTime updatedAt) {}
 
     public boolean hasMember(long userId) {
         return members.stream().anyMatch(m -> m.userId() == userId);
@@ -39,7 +42,7 @@ public record Epic(
         int expected = (int) Math.max(0, Math.min(100, Math.round(elapsed * 100.0 / total)));
         long daysLeft = ChronoUnit.DAYS.between(today, row.dueDate());
         return new Epic(row.id(), row.name(), row.description(), row.team(), row.startDate(), row.dueDate(),
-                row.status(), row.progress(), members, row.openIssues(),
+                row.status(), row.progress(), members, row.openIssues(), row.tasksTotal(), row.tasksDone(),
                 health(row, today, expected), expected, daysLeft, row.updatedAt());
     }
 

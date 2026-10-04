@@ -10,6 +10,10 @@ WorkPulseLens is a work app for teams: employees log what they did each day agai
 | **Blocker conversation** | **Weekend requests and alerts** |
 | ![Blocker and deadline issues inbox with a conversation open](docs/issue.png) | ![Weekend requests with the notification panel open](docs/requests.png) |
 
+| **Task board on an epic** | **Timesheets & workload** |
+|---|---|
+| ![Task board with To do, In progress, In review and Done columns, plus milestones](docs/tasks-board.png) | ![Weekly timesheet and open work per person](docs/workload.png) |
+
 **Admin: accounts**
 
 ![Admin accounts page](docs/admin.png)
@@ -27,11 +31,14 @@ The login page keeps the three.js 3D scene:
 **Managers**
 - **Dashboard**: active epics, how many are on track, at risk or overdue, open blockers, alerts that need an answer, pending weekend requests, and who has posted today.
 - **Epics**: create epics with a team, start date and deadline, and add any number of people (one person can be on several epics). Each epic shows progress against the time used, days left, open issues and a health badge: *On track*, *At risk* (more than 15 points behind schedule, or an open blocker or deadline issue), *Overdue* or *Done*. The epic page lists every daily update linked to it.
+- **Tasks and board** (like Teamwork): every epic has a board with *To do*, *In progress*, *In review* and *Done*. Add a task with an owner from the epic, a priority (low to urgent), a due date and an hour estimate, then drag it between columns. Filter the board to everyone's, your own or unassigned tasks. Open a task to edit it or comment on it.
+- **Milestones**: dated checkpoints inside an epic such as *Design approved* or *Launch*, shown with how many days are left or how late they are. Anyone on the epic can tick one off.
+- **Timesheets & workload**: a weekly grid of the hours everyone logged in their daily updates (move between weeks, export to CSV), and each person's open, in-progress, overdue and soon-due tasks with the estimate left, so you can see who is behind, busy or free.
 - **People**: everyone with their position, team and when they last posted (holidays at their office, and weekends in a Monday to Friday week, don't count against them). Edit a person to move teams, change position after a promotion, or give manager access; add new hires; create teams such as "Infinity".
 - **Blockers & issues**: an inbox of blockers, deadline risks and questions. Reply (with photos or files), and mark them resolved. New blockers from daily updates arrive here automatically.
 - **Weekend requests** (when the comp-off and overtime pay flag is on): approve or decline comp-off or overtime pay, or suggest an alternative (for example "take a comp-off day instead of pay").
 - **AI summary** for any person over 7, 14 or 30 days.
-- **Notifications** for new blockers, deadline risks, replies, weekend requests and epics marked done.
+- **Notifications** for new blockers, deadline risks, replies, weekend requests, epics marked done, and tasks finished or commented on.
 
 **Admins**
 - Everything a manager can do, plus an **Accounts** page listing every login, from interns to managers and other admins.
@@ -50,10 +57,11 @@ The login page keeps the three.js 3D scene:
 **Employees**
 - **My day**: write the daily update for any workday using the calendar, link it to an epic, add hours and blockers, and attach photos or files. The page shows *workdays logged this week* and hours, with no streaks. Holidays at your office are highlighted on the calendar and never count as missed days. The week is all 7 days, or Monday to Friday when the comp-off and overtime pay flag is on.
 - **Upcoming holidays** for your office, and **My settings** (click your name at the top) to pick the office you work from.
-- **My epics**: deadlines, health and a slider to report progress.
+- **My epics**: deadlines, health and a slider to report progress. Open an epic to work on its task board: add tasks, pick one up, and drag it along as it moves.
+- **My tasks**: every task given to you across epics, grouped into overdue, today, the next 7 days, later and no date. Tick one off when it's done. The sidebar shows how many are due today or late, and *My day* lists your next five.
 - **Raise an issue** when something blocks you or a deadline is at risk; your manager is notified and replies in the same thread.
 - **Weekend work** (when the flag is on): pick the Saturday or Sunday you worked, choose comp-off or paid, and follow the manager's answer. Accept their alternative or cancel the request.
-- **Notifications** when you're added to an epic, when your manager replies, and when a request is decided.
+- **Notifications** when you're added to an epic or given a task, when someone comments on your task, when your manager replies, and when a request is decided.
 
 ## Project layout
 
@@ -65,7 +73,7 @@ daily-update-website/
 │   ├── auth-service/     users, passwords, login tokens
 │   ├── worklog-service/  daily work logs
 │   ├── summary-service/  AI summaries (calls Claude)
-│   └── project-service/  epics, issues, notifications, weekend requests, attachments
+│   └── project-service/  epics, tasks, milestones, issues, notifications, weekend requests, attachments
 ├── config/     docker-compose.yml and .env.example
 └── docs/       Screenshots
 ```
@@ -79,7 +87,7 @@ Browser ──► frontend (nginx: React build + API gateway, :8080)
               ├── /api/logs                           ──► worklog-service  (:4002)
               ├── /api/summaries                      ──► summary-service  (:4003) ──► Claude API
               └── /api/epics, /api/issues,            ──► project-service  (:4004) ──► uploads volume
-                  /api/weekend-requests,
+                  /api/tasks, /api/weekend-requests,
                   /api/notifications, /api/attachments
                                                 │
                      all services ──────────────┴──► PostgreSQL 17
@@ -91,7 +99,7 @@ Browser ──► frontend (nginx: React build + API gateway, :8080)
 | auth-service | `users`, `teams`, `app_settings`, `holidays` tables | Sign-up, login, roles (employee, manager, admin), positions, teams, offices, deactivation, feature flags, office holidays, first admin and manager seeded from `.env` |
 | worklog-service | `work_logs` table | One entry per employee per day, optionally linked to an epic; a new blocker becomes an alert |
 | summary-service | `summaries` table | Fetches logs from worklog-service, asks Claude to summarize, saves the result |
-| project-service | `epics`, `epic_members`, `issues`, `issue_replies`, `weekend_requests`, `notifications`, `attachments` | Epics and their health, blockers with replies, in-app notifications, comp-off/paid requests, file uploads |
+| project-service | `epics`, `epic_members`, `tasks`, `task_comments`, `milestones`, `issues`, `issue_replies`, `weekend_requests`, `notifications`, `attachments` | Epics and their health, task boards, milestones, blockers with replies, in-app notifications, comp-off/paid requests, file uploads |
 | db | PostgreSQL | Each service creates its own tables on start (`schema.sql`) |
 
 The backend is Spring Boot 4.1 on Java 21 with Spring Security, JDBC (`JdbcClient`) and Bean Validation. Services call each other with the caller's own login token (summary-service reads logs as the manager; worklog-service raises a blocker as the employee), so every service checks permissions itself. AI summaries use the official Anthropic Java SDK with model `claude-opus-5-5` by default.
@@ -200,9 +208,18 @@ All endpoints except sign-up and login need `Authorization: Bearer <token>`. Err
 | GET | `/api/logs/overview` | manager | Last log date and 7-day count per employee |
 | GET | `/api/logs/user/{userId}?from=&to=` | manager | An employee's logs |
 | GET | `/api/logs/epic/{epicId}?from=&to=` | manager | Logs linked to an epic |
+| GET | `/api/logs/timesheet?from=&to=` | manager | Hours per person per day for up to 31 days |
 | GET | `/api/epics` | any user | Managers: all epics; employees: their own (with health, members, open issues) |
 | POST / PUT / DELETE | `/api/epics[/{id}]` | manager | Create, edit (including members) or delete an epic |
 | PATCH | `/api/epics/{id}/progress` `{progress}` | member or manager | Report progress |
+| GET / POST | `/api/epics/{id}/milestones` `{name, dueDate}` | member or manager / manager | List or add milestones |
+| PATCH / DELETE | `/api/epics/{id}/milestones/{milestoneId}` `{name, dueDate, done}` | manager (members may only set `done`) / manager | Edit, tick off or delete a milestone |
+| GET | `/api/tasks?epicId=` | member or manager | An epic's tasks |
+| GET | `/api/tasks/mine` | any user | Tasks assigned to the caller (finished ones from the last 14 days) |
+| GET | `/api/tasks/workload` | manager | Open, in-progress, overdue, due-this-week and recently done tasks per person |
+| POST | `/api/tasks` `{epicId, title, description, status, priority, assigneeId, dueDate, estimateHours}` | member or manager | Add a task; the owner must be on the epic and is notified |
+| GET / PATCH / DELETE | `/api/tasks/{id}` | member, owner or manager (delete: manager or creator) | Task with comments / change any field (`unassign`, `clearDueDate` to clear) / delete |
+| POST | `/api/tasks/{id}/comments` `{body}` | member, owner or manager | Comment; the creator and owner are notified |
 | GET / POST | `/api/issues[?status=open]` | any user | List (managers: all; employees: own) / raise a blocker, deadline risk or question |
 | GET / PATCH | `/api/issues/{id}` `{status}` | manager or raiser | Issue with replies and files / resolve or reopen |
 | POST | `/api/issues/{id}/replies` `{body, attachmentIds}` | manager or raiser | Reply; the other side is notified |

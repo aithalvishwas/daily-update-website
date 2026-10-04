@@ -15,7 +15,7 @@ public class SecurityConfig {
         return SecuritySupport.apply(http, jwtService)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/error").permitAll()
-                        .requestMatchers("/api/logs/overview", "/api/logs/user/**", "/api/logs/epic/**").hasRole("MANAGER")
+                        .requestMatchers("/api/logs/overview", "/api/logs/timesheet", "/api/logs/user/**", "/api/logs/epic/**").hasRole("MANAGER")
                         .anyRequest().authenticated())
                 .build();
     }

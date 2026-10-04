@@ -70,3 +70,28 @@ export function isManager(user) {
 }
 
 export const ROLE_LABEL = { admin: 'Admin', manager: 'Manager', employee: 'Employee' };
+
+export const TASK_STATUS = [
+  ['todo', 'To do'],
+  ['in_progress', 'In progress'],
+  ['review', 'In review'],
+  ['done', 'Done'],
+];
+export const TASK_STATUS_LABEL = Object.fromEntries(TASK_STATUS);
+
+export const PRIORITY = {
+  urgent: { label: 'Urgent', tone: 'red' },
+  high: { label: 'High', tone: 'amber' },
+  medium: { label: 'Medium', tone: 'blue' },
+  low: { label: 'Low', tone: 'gray' },
+};
+
+/** "Due today", "2 days overdue", "Due Mar 4" for an open task; null when it has no date or is done. */
+export function taskDue(task, today = localToday()) {
+  if (!task.dueDate || task.status === 'done') return null;
+  const days = daysBetween(today, task.dueDate);
+  if (days < 0) return { text: `${-days} day${days === -1 ? '' : 's'} overdue`, late: true };
+  if (days === 0) return { text: 'Due today', soon: true };
+  if (days === 1) return { text: 'Due tomorrow', soon: true };
+  return { text: `Due ${formatDate(task.dueDate, { month: 'short', day: 'numeric' })}` };
+}

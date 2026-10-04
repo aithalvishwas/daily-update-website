@@ -24,6 +24,9 @@ public class WorkLogRepository {
 
     public record Overview(long userId, LocalDate lastLogDate, int logsLast7Days) {}
 
+    public record TimesheetEntry(long userId, String userName, LocalDate workDate, BigDecimal hours, Long epicId,
+            String epicName) {}
+
     private final JdbcClient jdbc;
 
     public WorkLogRepository(JdbcClient jdbc) {
@@ -104,6 +107,16 @@ public class WorkLogRepository {
                                CAST(COUNT(*) FILTER (WHERE work_date >= CURRENT_DATE - 6) AS int) AS logs_last7_days
                         FROM work_logs GROUP BY user_id""")
                 .query(Overview.class)
+                .list();
+    }
+
+    public List<TimesheetEntry> timesheet(LocalDate from, LocalDate to) {
+        return jdbc.sql("""
+                        SELECT user_id, user_name, work_date, hours, epic_id, epic_name FROM work_logs
+                        WHERE work_date BETWEEN :from AND :to ORDER BY user_name, work_date""")
+                .param("from", from)
+                .param("to", to)
+                .query(TimesheetEntry.class)
                 .list();
     }
 
