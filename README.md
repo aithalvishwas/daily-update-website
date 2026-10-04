@@ -18,7 +18,7 @@ WorkPulseLens is a work app for teams: employees log what they did each day agai
 
 ![Admin accounts page](docs/admin.png)
 
-The public landing page at workpulselens.com. Companies sign up here and each gets its own workspace at `<company>.workpulselens.com`; nobody logs in on workpulselens.com itself (*Sign in* asks for your workspace address and takes you there):
+The public landing page at workpulselens.com. Companies sign up here and each gets its own workspace at `<company>.workpulselens.com`; nobody logs in on workpulselens.com itself:
 
 ![WorkPulseLens landing page](docs/landing.png)
 
@@ -28,7 +28,7 @@ The login page keeps the three.js 3D scene:
 
 ## Company workspaces
 
-- A company signs up on **workpulselens.com** with its name, a workspace address and the first admin's name, email and password. The workspace opens at `<address>.workpulselens.com` (for example `google.workpulselens.com`) and the person who signed up is its admin.
+- A company signs up on **workpulselens.com** with its name, size and the first admin's name, email and password. Its workspace address is made from the company name automatically (*Google* gets `google.workpulselens.com`, and a second *Google* gets `google-2`), and the person who signed up is its admin.
 - Logging in and joining as an employee only happen on a company's own address, and only for that company's accounts. The same email can belong to accounts in two companies.
 - Every company's data is kept apart: people, teams, epics, tasks, logs, summaries, issues, requests, notifications, attachments, holidays and settings.
 - Everything from before workspaces existed lives in the default workspace, `app.workpulselens.com` (change the address with `DEFAULT_WORKSPACE` in `config/.env` before the first start).
@@ -196,9 +196,8 @@ All endpoints except sign-up, login and the `/api/companies` lookups need `Autho
 
 | Method | Path | Who | Purpose |
 |---|---|---|---|
-| POST | `/api/companies` `{companyName, slug, name, email, password}` | anyone | Sign a company up; creates its workspace with that person as admin |
+| POST | `/api/companies` `{companyName, name, email, password, orgSize, phone}` | anyone | Sign a company up; creates its workspace (address made from the company name) with that person as admin |
 | GET | `/api/companies/current` | anyone | Which workspace this address is (`null` on the public site) and the root domain |
-| GET | `/api/companies/check?slug=` | anyone | Whether a workspace address is free |
 | GET | `/api/companies/tls-check?domain=` | Caddy | 200 if the address is ours, so Caddy may get it a certificate |
 | POST | `/api/auth/register` | anyone | Join this workspace as an employee, returns a token |
 | POST | `/api/auth/login` | anyone | Log in to this workspace, returns a token |

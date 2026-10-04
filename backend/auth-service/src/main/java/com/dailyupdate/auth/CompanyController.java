@@ -60,17 +60,6 @@ public class CompanyController {
         return body;
     }
 
-    /** Whether a workspace address is free, for the sign-up form. */
-    @GetMapping("/check")
-    public Map<String, Object> check(@RequestParam String slug) {
-        try {
-            String clean = workspaces.validSlug(slug);
-            return Map.of("slug", clean, "available", !companies.slugTaken(clean));
-        } catch (ApiException e) {
-            return Map.of("slug", slug, "available", false, "reason", e.getMessage());
-        }
-    }
-
     /** Asked by Caddy before it gets an HTTPS certificate for an address: only real workspaces get one. */
     @GetMapping("/tls-check")
     public ResponseEntity<Void> tlsCheck(@RequestParam String domain) {
@@ -81,28 +70,34 @@ public class CompanyController {
         return ResponseEntity.status(ours ? HttpStatus.OK : HttpStatus.NOT_FOUND).build();
     }
 
-    /** A company signs up: creates its workspace with the person signing up as its admin. */
+    /**
+     * A company signs up: creates its workspace, at an address made from its name, with the person
+     * signing up as its admin.
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> signUp(@Valid @RequestBody Requests.CompanySignup body, HttpServletRequest request) {
         String ip = request.getHeader("X-Real-IP");
         signupLimiter.check(ip != null ? ip : request.getRemoteAddr(), "Too many sign-ups, please try again later");
-        String slug = workspaces.validSlug(body.slug());
-        if (companies.slugTaken(slug)) {
-            throw new ApiException(409, "That workspace address is taken");
-        }
-        long id = companies.nextId();
-        try {
-            Company company = TenantContext.call(id, () -> tx.execute(status -> {
-                Company created = companies.insert(id, slug, body.companyName().trim(),
-                        UserService.blankToNull(body.orgSize()), UserService.blankToNull(body.phone()));
-                userService.create(body.name(), body.email(), body.password(), null, "Admin", AuthUser.ADMIN);
-                holidays.seed();
-                return created;
-            }));
-            return Map.of("workspace", company.toPublic(), "rootDomain", workspaces.rootDomain());
-        } catch (DuplicateKeyException e) {
-            throw new ApiException(409, "That workspace address is taken");
+        // The address comes from the company name. Two companies signing up with the same name at
+        // the same moment can both pick it, so the second one tries the next number.
+        for (int attempt = 0; ; attempt++) {
+            String slug = workspaces.newSlug(body.companyName());
+            long id = companies.nextId();
+            try {
+                Company company = TenantContext.call(id, () -> tx.execute(status -> {
+                    Company created = companies.insert(id, slug, body.companyName().trim(),
+                            UserService.blankToNull(body.orgSize()), UserService.blankToNull(body.phone()));
+                    userService.create(body.name(), body.email(), body.password(), null, "Admin", AuthUser.ADMIN);
+                    holidays.seed();
+                    return created;
+                }));
+                return Map.of("workspace", company.toPublic(), "rootDomain", workspaces.rootDomain());
+            } catch (DuplicateKeyException e) {
+                if (attempt >= 2) {
+                    throw new ApiException(409, "Please try again");
+                }
+            }
         }
     }
 }

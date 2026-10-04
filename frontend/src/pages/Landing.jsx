@@ -170,7 +170,6 @@ function Nav() {
           <a href="#security" onClick={jump('security')}>Security</a>
         </nav>
         <div className="lp-nav-cta">
-          <a href="#/login" className="lp-btn lp-btn-ghost">Sign in</a>
           <a href="#/signup" className="lp-btn lp-btn-primary">Get started</a>
         </div>
         <button type="button" className="lp-menu" aria-label="Menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
@@ -210,7 +209,6 @@ function Hero({ reduced }) {
           <a href="#/signup" className="lp-btn lp-btn-primary lp-btn-lg">
             Get started free <Icon name="chevronRight" size={16} />
           </a>
-          <a href="#/login" className="lp-btn lp-btn-glass lp-btn-lg">Sign in</a>
         </div>
         <ul className="lp-hero-ticks">
           <li><Icon name="check" size={16} /> Works for interns to admins</li>
@@ -456,8 +454,7 @@ function Cta() {
             <a href="#/signup" className="lp-btn lp-btn-white lp-btn-lg">
               Get started free <Icon name="chevronRight" size={16} />
             </a>
-            <a href="#/login" className="lp-btn lp-btn-glass lp-btn-lg">Sign in</a>
-          </div>
+            </div>
         </div>
       </div>
     </section>
@@ -471,7 +468,6 @@ function Footer() {
         <Logo />
         <p>Daily work updates, epic health and AI summaries for teams.</p>
         <nav aria-label="Footer">
-          <a href="#/login">Sign in</a>
           <a href="#/signup">Sign up your company</a>
         </nav>
         <small>© {new Date().getFullYear()} WorkPulseLens</small>

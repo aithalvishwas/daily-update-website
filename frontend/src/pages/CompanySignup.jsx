@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { api } from '../api.js';
 import { useToast } from '../components/Toast.jsx';
 import Logo from '../components/Logo.jsx';
@@ -14,39 +14,13 @@ const POINTS = [
 
 const ORG_SIZES = ['1-10', '11-50', '51-200', '201-1000', '1000+'];
 
-// The public site only signs companies up. People log in on their company's own address,
-// so "Sign in" here just takes them there.
-export default function CompanySignup({ rootDomain, mode = 'signup' }) {
+// The public site only signs companies up. The workspace address is made from the company name,
+// and people log in there.
+export default function CompanySignup({ rootDomain }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [company, setCompany] = useState('');
-  const [slug, setSlug] = useState('');
-  const [slugEdited, setSlugEdited] = useState(false);
-  const [check, setCheck] = useState(null);
-  const findRef = useRef(null);
-
-  useEffect(() => {
-    if (mode === 'find') findRef.current?.focus();
-  }, [mode]);
-
-  // Live check of the address as it's typed.
-  useEffect(() => {
-    if (!slug) {
-      setCheck(null);
-      return undefined;
-    }
-    const timer = setTimeout(() => {
-      api(`/api/companies/check?slug=${encodeURIComponent(slug)}`)
-        .then(setCheck)
-        .catch(() => setCheck(null));
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [slug]);
-
-  function onCompany(e) {
-    setCompany(e.target.value);
-    if (!slugEdited) setSlug(slugify(e.target.value));
-  }
+  const preview = slugify(company);
 
   async function submit(e) {
     e.preventDefault();
@@ -57,7 +31,6 @@ export default function CompanySignup({ rootDomain, mode = 'signup' }) {
         method: 'POST',
         body: {
           companyName: company,
-          slug,
           name: `${f.firstName.trim()} ${f.lastName.trim()}`.trim(),
           email: f.email,
           password: f.password,
@@ -75,14 +48,6 @@ export default function CompanySignup({ rootDomain, mode = 'signup' }) {
       setBusy(false);
     }
   }
-
-  function go(e) {
-    e.preventDefault();
-    const target = slugify(new FormData(e.currentTarget).get('workspace') || '');
-    if (target) window.location.href = workspaceUrl(target, rootDomain, '/#/login');
-  }
-
-  const taken = check && check.slug === slug && !check.available;
 
   return (
     <div className="cs">
@@ -106,17 +71,6 @@ export default function CompanySignup({ rootDomain, mode = 'signup' }) {
             ))}
           </ul>
 
-          <form className="cs-find" onSubmit={go}>
-            <h2>Already have a workspace?</h2>
-            <p>Log in on your company’s own address.</p>
-            <div className="cs-find-row">
-              <div className="address-field">
-                <input ref={findRef} name="workspace" placeholder="yourcompany" aria-label="Your workspace address" required />
-                <span>.{rootDomain}</span>
-              </div>
-              <button className="cs-btn cs-btn-outline" type="submit">Go</button>
-            </div>
-          </form>
         </section>
 
         <section className="cs-card">
@@ -143,38 +97,18 @@ export default function CompanySignup({ rootDomain, mode = 'signup' }) {
               <input
                 name="companyName"
                 value={company}
-                onChange={onCompany}
+                onChange={(e) => setCompany(e.target.value)}
                 placeholder="Enter your company"
                 maxLength={100}
                 autoComplete="organization"
                 required
               />
             </label>
-            <label className="cs-span">
-              <span><b>*</b>Workspace address</span>
-              <div className="address-field">
-                <input
-                  name="slug"
-                  value={slug}
-                  placeholder="yourcompany"
-                  onChange={(e) => {
-                    setSlugEdited(true);
-                    setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40));
-                  }}
-                  aria-describedby="slug-help"
-                  aria-invalid={taken || undefined}
-                  required
-                />
-                <span>.{rootDomain}</span>
-              </div>
-              <small id="slug-help" className={`field-help ${taken ? 'field-error' : check?.available ? 'field-ok' : ''}`}>
-                {taken
-                  ? check.reason || 'That address is taken'
-                  : check?.available
-                    ? `${slug}.${rootDomain} is available`
-                    : 'Your team logs in here. Letters, numbers and dashes.'}
-              </small>
-            </label>
+            {preview.length >= 2 && (
+              <p className="cs-span cs-preview">
+                Your team will log in at <strong>{preview}.{rootDomain}</strong>
+              </p>
+            )}
             <label>
               <span><b>*</b>Organization size</span>
               <select name="orgSize" defaultValue="" required>
@@ -205,7 +139,7 @@ export default function CompanySignup({ rootDomain, mode = 'signup' }) {
               />
             </label>
             <div className="cs-span cs-actions">
-              <button className="cs-btn" type="submit" disabled={busy || taken}>
+              <button className="cs-btn" type="submit" disabled={busy}>
                 {busy ? 'Creating your workspace…' : 'Try it free'}
               </button>
             </div>

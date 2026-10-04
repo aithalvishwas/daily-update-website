@@ -2,6 +2,7 @@ package com.dailyupdate.auth;
 
 import com.dailyupdate.common.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.text.Normalizer;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -74,16 +75,24 @@ public class Workspaces {
         return companies.findBySlug(slug);
     }
 
-    /** Checks a requested address and returns it cleaned up. */
-    public String validSlug(String raw) {
-        String slug = raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
-        if (slug.length() < 2 || !SLUG.matcher(slug).matches()) {
-            throw new ApiException(400,
-                    "Workspace address must be 2 to 40 letters, numbers or dashes, and can't start or end with a dash");
+    /**
+     * A free address made from the company name: "Acme Labs Pvt. Ltd." becomes acme-labs-pvt-ltd,
+     * or acme-labs-pvt-ltd-2 when that's taken.
+     */
+    public String newSlug(String companyName) {
+        String base = Normalizer.normalize(companyName, Normalizer.Form.NFKD).toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+        if (base.length() > 36) {
+            base = base.substring(0, 36).replaceAll("-+$", "");
         }
-        if (RESERVED.contains(slug)) {
-            throw new ApiException(409, "That workspace address is taken");
+        if (base.length() < 2) {
+            base = "company";
         }
-        return slug;
+        for (int n = 1; ; n++) {
+            String slug = n == 1 ? base : base + "-" + n;
+            if (SLUG.matcher(slug).matches() && !RESERVED.contains(slug) && !companies.slugTaken(slug)) {
+                return slug;
+            }
+        }
     }
 }

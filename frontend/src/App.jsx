@@ -104,9 +104,7 @@ function useWorkplaceData(token) {
 
 // workpulselens.com itself: the marketing page and company sign-up. Nobody logs in here.
 function PublicSite({ path, rootDomain }) {
-  if (path[0] === 'signup' || path[0] === 'login') {
-    return <CompanySignup key={path[0]} rootDomain={rootDomain} mode={path[0] === 'login' ? 'find' : 'signup'} />;
-  }
+  if (path[0] === 'signup' || path[0] === 'login') return <CompanySignup rootDomain={rootDomain} />;
   return <Landing />;
 }
 

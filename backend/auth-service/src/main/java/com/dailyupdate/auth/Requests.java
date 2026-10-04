@@ -71,7 +71,6 @@ final class Requests {
     record CompanySignup(
             @NotBlank(message = "Company name is required (max 100 characters)")
             @Size(max = 100, message = "Company name is required (max 100 characters)") String companyName,
-            @NotBlank(message = "Pick a workspace address") String slug,
             @NotBlank(message = "Your name is required (max 100 characters)")
             @Size(max = 100, message = "Your name is required (max 100 characters)") String name,
             @NotBlank(message = "A valid email is required")

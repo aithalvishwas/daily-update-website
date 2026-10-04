@@ -722,15 +722,7 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
 .auth-panel { display: flex; align-items: center; justify-content: center; padding: 32px 16px; background: var(--bg); }
 .auth-card { width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow-lg); }
 .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
-.auth-stack { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
-.auth-find { padding: 22px 32px; gap: 10px; box-shadow: var(--shadow-sm); }
-.auth-find h3 { font-size: 1rem; }
 .auth-workspace { display: inline-flex; align-self: flex-start; padding: 3px 10px; border-radius: 999px; background: var(--gray-soft); color: var(--muted); font-size: 0.82rem; }
-.address-field { display: flex; align-items: stretch; min-width: 0; }
-.address-field input { flex: 1; min-width: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.address-field span { display: flex; align-items: center; padding: 0 10px; border: 1px solid var(--border-strong); border-left: 0; border-radius: 0 8px 8px 0; background: var(--gray-soft); color: var(--muted); font-size: 0.88rem; white-space: nowrap; }
-.field-help { color: var(--muted); font-size: 0.78rem; font-weight: 400; }
-.field-error { color: var(--red); }
 .boot-message { min-height: 100vh; display: grid; place-content: center; gap: 12px; padding: 16px; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -881,11 +873,6 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
 .cs-points { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 18px; font-size: 1.08rem; line-height: 1.5; }
 .cs-points li { display: flex; gap: 14px; align-items: flex-start; }
 .cs-tick { flex: none; width: 20px; height: 20px; margin-top: 3px; border-radius: 50%; display: grid; place-items: center; background: #2f7de1; color: #fff; }
-.cs-find { margin-top: 12px; padding-top: 24px; border-top: 1px solid #e4e4df; display: flex; flex-direction: column; gap: 6px; max-width: 440px; }
-.cs-find h2 { font-size: 1.05rem; }
-.cs-find p { color: #5c5c58; font-size: 0.92rem; }
-.cs-find-row { display: flex; gap: 10px; margin-top: 6px; }
-.cs-find-row .address-field { flex: 1; }
 .cs-card { background: var(--cs-card); border-radius: 22px; padding: clamp(24px, 3.5vw, 52px); display: flex; flex-direction: column; gap: 14px; }
 .cs-title { font-size: clamp(2.2rem, 3.6vw, 3.1rem); line-height: 1.1; }
 .cs-title em { font-style: italic; }
@@ -898,23 +885,18 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
 .cs input, .cs select { background: #fff; color: var(--cs-ink); border: 1px solid var(--cs-line); border-radius: 6px; min-height: 52px; padding: 10px 16px; font-size: 1rem; }
 .cs input::placeholder { color: #8a8a86; }
 .cs input:focus, .cs select:focus { border-color: var(--cs-ink); box-shadow: 0 0 0 3px rgba(27, 27, 27, 0.12); }
-.cs .address-field span { border-color: var(--cs-line); background: #e6e6e1; color: #4d4d49; border-radius: 0 6px 6px 0; font-size: 0.95rem; }
-.cs .address-field input { border-radius: 6px 0 0 6px; }
-.cs .field-ok { color: #1f7a3d; }
+.cs-preview { margin-top: -8px; color: #4d4d49; font-size: 0.92rem; }
+.cs-preview strong { color: var(--cs-ink); font-weight: 600; }
 .cs-actions { padding-top: 6px; }
 .cs-btn { font: inherit; font-weight: 600; font-size: 1.1rem; color: #fff; background: var(--cs-ink); border: 1px solid var(--cs-ink); border-radius: 999px; padding: 15px 44px; cursor: pointer; transition: background 0.15s, transform 0.15s; }
 .cs-btn:hover:not(:disabled) { background: #000; transform: translateY(-1px); }
 .cs-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.cs-btn-outline { background: transparent; color: var(--cs-ink); padding: 0 24px; font-size: 1rem; }
-.cs-btn-outline:hover:not(:disabled) { background: var(--cs-ink); color: #fff; }
 @media (max-width: 900px) {
   .cs-main { grid-template-columns: 1fr; }
   .cs-intro { padding-top: 0; }
   .cs-points { font-size: 1rem; }
-  .cs-find { order: 3; }
-}
+  }
 @media (max-width: 560px) {
   .cs-form { grid-template-columns: 1fr; }
   .cs-btn { width: 100%; }
-  .cs-find-row .cs-btn { width: auto; }
-}
+  }
