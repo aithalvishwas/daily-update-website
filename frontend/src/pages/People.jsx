@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { api } from '../api.js';
-import { daysBetween, formatDate, localToday, ROLE_LABEL, workdaysMissed, workWeek } from '../format.js';
+import { daysBetween, formatDate, localToday, ROLE_LABEL } from '../format.js';
 import { useLoad } from '../hooks.js';
 import { navigate } from '../router.js';
 import { AttachmentIds } from '../components/Attachments.jsx';
@@ -9,14 +9,15 @@ import Icon from '../components/Icon.jsx';
 import SummaryText from '../components/SummaryText.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { Badge, Empty, HealthBadge, Modal, Skeleton, Stat } from '../components/ui.jsx';
+import { useWorkCalendar, useWorkplace, workCalendar } from '../workplace.js';
 
 const ThinkingOrb = lazy(() => import('../components/ThinkingOrb.jsx'));
 
-function lastUpdate(overview, today) {
+function lastUpdate(overview, today, work) {
   if (!overview?.lastLogDate) return { label: 'No updates yet', tone: 'gray' };
   const ago = daysBetween(overview.lastLogDate, today);
-  // Weekends don't count: Friday's update is still current on Monday morning.
-  const missed = workdaysMissed(overview.lastLogDate, today);
+  // Days off (holidays, and weekends in a Mon–Fri week) don't count against anyone.
+  const missed = work.missed(overview.lastLogDate, today);
   const tone = missed <= 1 ? 'green' : missed <= 3 ? 'amber' : 'gray';
   if (ago <= 0) return { label: 'Today', tone };
   if (ago === 1) return { label: 'Yesterday', tone };
@@ -26,6 +27,7 @@ function lastUpdate(overview, today) {
 
 function PersonForm({ token, person, teams, onClose, onSaved }) {
   const toast = useToast();
+  const { offices } = useWorkplace();
   const [busy, setBusy] = useState(false);
 
   async function submit(e) {
@@ -62,6 +64,19 @@ function PersonForm({ token, person, teams, onClose, onSaved }) {
               <input name="email" type="email" required />
             </label>
           </>
+        )}
+        {!person && (
+          <label>
+            <span>
+              Office <span className="optional">sets their holidays</span>
+            </span>
+            <select name="office" defaultValue="">
+              <option value="">Not set</option>
+              {offices.map((o) => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+          </label>
         )}
         <div className="form-grid">
           <label>
@@ -165,8 +180,9 @@ function PersonDetail({ token, id }) {
     }
   }
 
-  const week = workWeek(localToday());
-  const weekLogs = (logs ?? []).filter((l) => week.includes(l.workDate));
+  const work = useWorkCalendar(person?.office ?? null);
+  const workdays = work.workdays(localToday());
+  const weekLogs = (logs ?? []).filter((l) => work.weekDays(localToday()).includes(l.workDate));
   const hours = weekLogs.reduce((s, l) => s + (Number(l.hours) || 0), 0);
   const blockers = (logs ?? []).filter((l) => l.blockers).length;
 
@@ -182,13 +198,13 @@ function PersonDetail({ token, id }) {
         <Avatar name={person.name} size={64} />
         <div className="grow">
           <h1>{person.name}</h1>
-          <p className="muted">{[person.position, person.team && `Team ${person.team}`, person.email].filter(Boolean).join(' · ')}</p>
+          <p className="muted">{[person.position, person.team && `Team ${person.team}`, person.office, person.email].filter(Boolean).join(' · ')}</p>
         </div>
         <Badge tone={person.role === 'employee' ? 'gray' : 'purple'}>{ROLE_LABEL[person.role]}</Badge>
       </div>
 
       <div className="stats-row">
-        <Stat label="Workdays logged this week" value={`${weekLogs.length}/5`} tone="blue" icon={<Icon name="calendar" />} />
+        <Stat label="Workdays logged this week" value={`${weekLogs.filter((l) => workdays.includes(l.workDate)).length}/${workdays.length}`} tone="blue" icon={<Icon name="calendar" />} />
         <Stat label="Hours this week" value={Math.round(hours * 10) / 10} tone="green" icon={<Icon name="clock" />} />
         <Stat label="Epics" value={epics?.length ?? '–'} tone="purple" icon={<Icon name="epics" />} />
         <Stat label="Blockers (30 days)" value={blockers} tone="red" icon={<Icon name="alert" />} />
@@ -307,6 +323,7 @@ export default function People({ token, id }) {
   const [team, setTeam] = useState('');
   const [editing, setEditing] = useState(null);
   const today = localToday();
+  const workplace = useWorkplace();
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -360,13 +377,14 @@ export default function People({ token, id }) {
                     <th>Name</th>
                     <th>Position</th>
                     <th>Team</th>
+                    <th>Office</th>
                     <th>Last update</th>
                     <th aria-label="Actions" />
                   </tr>
                 </thead>
                 <tbody>
                   {shown.map((p) => {
-                    const last = lastUpdate(overview?.get(p.id), today);
+                    const last = lastUpdate(overview?.get(p.id), today, workCalendar(workplace, p.office));
                     return (
                       <tr key={p.id} className="row-link" onClick={() => navigate(`/people/${p.id}`)}>
                         <td>
@@ -390,6 +408,7 @@ export default function People({ token, id }) {
                           )}
                         </td>
                         <td>{p.team ? <Badge tone="blue">{p.team}</Badge> : <span className="muted">—</span>}</td>
+                        <td>{p.office || <span className="muted">—</span>}</td>
                         <td>
                           <span className={`dot-label dot-${last.tone}`}>{last.label}</span>
                         </td>

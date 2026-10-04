@@ -22,6 +22,8 @@ public class AuthClient {
 
     private record UsersResponse(List<Person> users) {}
 
+    private record WorkplaceResponse(boolean weekendRequests) {}
+
     private final RestClient client;
 
     public AuthClient(@Value("${services.auth-url}") String authUrl) {
@@ -35,6 +37,16 @@ public class AuthClient {
         try {
             return client.get().uri("/api/users/managers").header("Authorization", authorization)
                     .retrieve().body(ManagersResponse.class).managers();
+        } catch (RestClientException e) {
+            throw new ApiException(502, "Auth service unavailable");
+        }
+    }
+
+    /** Feature flag: whether people can ask for comp-off or overtime pay for weekend work. */
+    public boolean weekendRequestsEnabled(String authorization) {
+        try {
+            return client.get().uri("/api/workplace").header("Authorization", authorization)
+                    .retrieve().body(WorkplaceResponse.class).weekendRequests();
         } catch (RestClientException e) {
             throw new ApiException(502, "Auth service unavailable");
         }

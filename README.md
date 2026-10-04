@@ -23,9 +23,9 @@ The login page keeps the three.js 3D scene:
 **Managers**
 - **Dashboard**: active epics, how many are on track, at risk or overdue, open blockers, alerts that need an answer, pending weekend requests, and who has posted today.
 - **Epics**: create epics with a team, start date and deadline, and add any number of people (one person can be on several epics). Each epic shows progress against the time used, days left, open issues and a health badge: *On track*, *At risk* (more than 15 points behind schedule, or an open blocker or deadline issue), *Overdue* or *Done*. The epic page lists every daily update linked to it.
-- **People**: everyone with their position, team and when they last posted (weekends don't count against them). Edit a person to move teams, change position after a promotion, or give manager access; add new hires; create teams such as "Infinity".
+- **People**: everyone with their position, team and when they last posted (holidays at their office, and weekends in a Monday to Friday week, don't count against them). Edit a person to move teams, change position after a promotion, or give manager access; add new hires; create teams such as "Infinity".
 - **Blockers & issues**: an inbox of blockers, deadline risks and questions. Reply (with photos or files), and mark them resolved. New blockers from daily updates arrive here automatically.
-- **Weekend requests**: approve or decline comp-off or overtime pay, or suggest an alternative (for example "take a comp-off day instead of pay").
+- **Weekend requests** (when the comp-off and overtime pay flag is on): approve or decline comp-off or overtime pay, or suggest an alternative (for example "take a comp-off day instead of pay").
 - **AI summary** for any person over 7, 14 or 30 days.
 - **Notifications** for new blockers, deadline risks, replies, weekend requests and epics marked done.
 
@@ -35,13 +35,20 @@ The login page keeps the three.js 3D scene:
 - **Edit** anyone's name, login email, position, team or access level.
 - **Reset a password**. The new one is shown once so you can share it.
 - **Deactivate** ("delete") after a confirmation: the person can't log in and drops out of lists, pickers and alerts, but their history stays. Reactivate any time.
+- **Holidays & settings**:
+  - The **comp-off and overtime pay** feature flag. With it **off** (the default), all 7 days are normal workdays and there are no weekend requests. With it **on**, the week is Monday to Friday and people can claim comp-off or overtime pay for Saturday or Sunday work.
+  - **Office holidays** for the India offices: Bengaluru, Chennai, Gurgaon, Hyderabad, Mumbai and Pune. A starter list for 2026 and 2027 is loaded on first start. Add, edit or delete holidays for one office or every office. Festival dates follow the lunar calendar, so check them against your official list.
+  - Set anyone's office on the Accounts page.
+
+  ![Holidays and the comp-off feature flag](docs/holidays.png)
 - Safety rules: there is always at least one active admin, you can't deactivate yourself or remove your own admin access, and managers can't change admin accounts.
 
 **Employees**
-- **My day**: write the daily update for any workday using the calendar, link it to an epic, add hours and blockers, and attach photos or files. The work week is Monday to Friday: the page shows *x/5 workdays logged* and hours this week, with no streaks.
+- **My day**: write the daily update for any workday using the calendar, link it to an epic, add hours and blockers, and attach photos or files. The page shows *workdays logged this week* and hours, with no streaks. Holidays at your office are highlighted on the calendar and never count as missed days. The week is all 7 days, or Monday to Friday when the comp-off and overtime pay flag is on.
+- **Upcoming holidays** for your office, and **My settings** (click your name at the top) to pick the office you work from.
 - **My epics**: deadlines, health and a slider to report progress.
 - **Raise an issue** when something blocks you or a deadline is at risk; your manager is notified and replies in the same thread.
-- **Weekend work**: pick the Saturday or Sunday you worked, choose comp-off or paid, and follow the manager's answer. Accept their alternative or cancel the request.
+- **Weekend work** (when the flag is on): pick the Saturday or Sunday you worked, choose comp-off or paid, and follow the manager's answer. Accept their alternative or cancel the request.
 - **Notifications** when you're added to an epic, when your manager replies, and when a request is decided.
 
 ## Project layout
@@ -64,7 +71,7 @@ daily-update-website/
 ```
 Browser ──► frontend (nginx: React build + API gateway, :8080)
               ├── /api/auth, /api/users, /api/teams,  ──► auth-service     (:4001)
-              │   /api/admin
+              │   /api/admin, /api/workplace
               ├── /api/logs                           ──► worklog-service  (:4002)
               ├── /api/summaries                      ──► summary-service  (:4003) ──► Claude API
               └── /api/epics, /api/issues,            ──► project-service  (:4004) ──► uploads volume
@@ -77,7 +84,7 @@ Browser ──► frontend (nginx: React build + API gateway, :8080)
 | Service | Owns | Notes |
 |---|---|---|
 | frontend | React app | nginx serves the build, routes `/api/*` to the right service and sets security headers |
-| auth-service | `users`, `teams` tables | Sign-up, login, roles (employee, manager, admin), positions, teams, deactivation, first admin and manager seeded from `.env` |
+| auth-service | `users`, `teams`, `app_settings`, `holidays` tables | Sign-up, login, roles (employee, manager, admin), positions, teams, offices, deactivation, feature flags, office holidays, first admin and manager seeded from `.env` |
 | worklog-service | `work_logs` table | One entry per employee per day, optionally linked to an epic; a new blocker becomes an alert |
 | summary-service | `summaries` table | Fetches logs from worklog-service, asks Claude to summarize, saves the result |
 | project-service | `epics`, `epic_members`, `issues`, `issue_replies`, `weekend_requests`, `notifications`, `attachments` | Epics and their health, blockers with replies, in-app notifications, comp-off/paid requests, file uploads |
@@ -165,12 +172,17 @@ All endpoints except sign-up and login need `Authorization: Bearer <token>`. Err
 | POST | `/api/auth/register` | anyone | Create an employee account, returns a token |
 | POST | `/api/auth/login` | anyone | Log in, returns a token |
 | GET | `/api/auth/me` | any user | Current user |
+| PATCH | `/api/auth/me` `{office}` | any user | Pick your own office (decides your holidays) |
+| GET | `/api/workplace` | any user | `weekendRequests` flag, offices, and holidays from last year to next year |
+| PUT | `/api/admin/settings` `{weekendRequests}` | admin | Turn comp-off and overtime pay on or off |
+| POST | `/api/admin/holidays` `{date, city, name}` | admin | Add a holiday; leave `city` empty for every office |
+| PATCH / DELETE | `/api/admin/holidays/{id}` | admin | Edit or delete a holiday |
 | GET | `/api/users?all=true` | manager | List employees (or everyone) |
 | GET | `/api/users/{id}` | manager | One user |
 | POST | `/api/users` | manager | Create an employee or manager with team and position |
 | PATCH | `/api/users/{id}` `{team, position, role}` | manager | Move teams, promote, change role (not on admins) |
 | GET / POST | `/api/admin/users` | admin | Every account, including deactivated / create any account |
-| PATCH | `/api/admin/users/{id}` `{name, email, team, position, role}` | admin | Edit an account, including the login email |
+| PATCH | `/api/admin/users/{id}` `{name, email, team, position, office, role}` | admin | Edit an account, including the login email |
 | POST | `/api/admin/users/{id}/password` `{password}` | admin | Set a new password |
 | DELETE / POST | `/api/admin/users/{id}`, `/api/admin/users/{id}/activate` | admin | Deactivate / reactivate (history is kept) |
 | GET / POST | `/api/teams` | any user / manager | List teams with member counts / add a team |
@@ -186,7 +198,7 @@ All endpoints except sign-up and login need `Authorization: Bearer <token>`. Err
 | GET / POST | `/api/issues[?status=open]` | any user | List (managers: all; employees: own) / raise a blocker, deadline risk or question |
 | GET / PATCH | `/api/issues/{id}` `{status}` | manager or raiser | Issue with replies and files / resolve or reopen |
 | POST | `/api/issues/{id}/replies` `{body, attachmentIds}` | manager or raiser | Reply; the other side is notified |
-| GET / POST | `/api/weekend-requests` | any user | List / request comp-off or pay for a Saturday or Sunday |
+| GET / POST | `/api/weekend-requests` | any user | List / request comp-off or pay for a Saturday or Sunday (refused while the flag is off) |
 | POST | `/api/weekend-requests/{id}/decision` `{decision, note, alternative}` | manager | `approve`, `reject` or `alternative` |
 | POST | `/api/weekend-requests/{id}/accept-alternative`, `/cancel` | owner | Accept the suggestion or withdraw |
 | GET | `/api/notifications` | any user | Latest 50 and the unread count |

@@ -1,0 +1,56 @@
+# Starter office holidays for India, loaded once on first start. Admins edit the list in the app.
+# Festival dates follow the lunar calendar and are announced each year, so check them against
+# your company's official holiday list.
+# date,offices (All, or office names separated by spaces),name
+2026-01-01,All,New Year's Day
+2026-01-15,Chennai,Pongal
+2026-01-16,Chennai,Thiruvalluvar Day
+2026-01-15,Bengaluru Hyderabad,Makar Sankranti
+2026-01-26,All,Republic Day
+2026-03-04,Gurgaon Hyderabad Mumbai Pune,Holi
+2026-03-19,Bengaluru Hyderabad,Ugadi
+2026-03-19,Mumbai Pune,Gudi Padwa
+2026-03-21,All,Id-ul-Fitr
+2026-04-03,All,Good Friday
+2026-04-14,Chennai,Tamil New Year
+2026-04-14,Bengaluru Gurgaon Hyderabad Mumbai Pune,Dr. Ambedkar Jayanti
+2026-05-01,Mumbai Pune,Maharashtra Day
+2026-05-01,Bengaluru Chennai Hyderabad,May Day
+2026-05-27,All,Bakrid
+2026-06-02,Hyderabad,Telangana Formation Day
+2026-08-15,All,Independence Day
+2026-09-04,Gurgaon Mumbai Pune,Janmashtami
+2026-09-14,Bengaluru Chennai Hyderabad Mumbai Pune,Ganesh Chaturthi
+2026-10-02,All,Gandhi Jayanti
+2026-10-19,Bengaluru Chennai Hyderabad,Ayudha Puja
+2026-10-20,All,Dussehra
+2026-11-01,Bengaluru,Karnataka Rajyotsava
+2026-11-08,All,Diwali
+2026-11-24,Gurgaon Mumbai Pune,Guru Nanak Jayanti
+2026-12-25,All,Christmas
+2027-01-01,All,New Year's Day
+2027-01-15,Chennai,Pongal
+2027-01-16,Chennai,Thiruvalluvar Day
+2027-01-15,Bengaluru Hyderabad,Makar Sankranti
+2027-01-26,All,Republic Day
+2027-03-10,All,Id-ul-Fitr
+2027-03-22,Gurgaon Hyderabad Mumbai Pune,Holi
+2027-03-26,All,Good Friday
+2027-04-07,Bengaluru Hyderabad,Ugadi
+2027-04-07,Mumbai Pune,Gudi Padwa
+2027-04-14,Chennai,Tamil New Year
+2027-04-14,Bengaluru Gurgaon Hyderabad Mumbai Pune,Dr. Ambedkar Jayanti
+2027-05-01,Mumbai Pune,Maharashtra Day
+2027-05-01,Bengaluru Chennai Hyderabad,May Day
+2027-05-17,All,Bakrid
+2027-06-02,Hyderabad,Telangana Formation Day
+2027-08-15,All,Independence Day
+2027-08-25,Gurgaon Mumbai Pune,Janmashtami
+2027-09-04,Bengaluru Chennai Hyderabad Mumbai Pune,Ganesh Chaturthi
+2027-10-02,All,Gandhi Jayanti
+2027-10-08,Bengaluru Chennai Hyderabad,Ayudha Puja
+2027-10-09,All,Dussehra
+2027-10-29,All,Diwali
+2027-11-01,Bengaluru,Karnataka Rajyotsava
+2027-11-14,Gurgaon Mumbai Pune,Guru Nanak Jayanti
+2027-12-25,All,Christmas

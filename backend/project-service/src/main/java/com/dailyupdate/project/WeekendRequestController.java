@@ -23,8 +23,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The work week is Monday to Friday. Work on a Saturday or Sunday can be claimed as a comp-off day
- * or as paid overtime; a manager approves, rejects or suggests an alternative.
+ * Behind the admin's "comp-off and overtime pay" feature flag. With the flag on, the work week is
+ * Monday to Friday and work on a Saturday or Sunday can be claimed as a comp-off day or as paid
+ * overtime; a manager approves, rejects or suggests an alternative. With it off, every day is a
+ * workday and no new requests are taken (managers can still settle open ones).
  */
 @RestController
 @RequestMapping("/api/weekend-requests")
@@ -38,10 +40,12 @@ public class WeekendRequestController {
 
     private final WeekendRequestRepository requests;
     private final Notifier notifier;
+    private final AuthClient authClient;
 
-    public WeekendRequestController(WeekendRequestRepository requests, Notifier notifier) {
+    public WeekendRequestController(WeekendRequestRepository requests, Notifier notifier, AuthClient authClient) {
         this.requests = requests;
         this.notifier = notifier;
+        this.authClient = authClient;
     }
 
     @GetMapping
@@ -55,6 +59,9 @@ public class WeekendRequestController {
     public Map<String, WeekendRequestRepository.WeekendRequest> submit(@RequestBody SubmitRequest body,
             @RequestHeader("Authorization") String auth) {
         AuthUser me = SecuritySupport.currentUser();
+        if (!authClient.weekendRequestsEnabled(auth)) {
+            throw new ApiException(403, "Comp-off and overtime pay requests are turned off. Every day is a workday.");
+        }
         LocalDate day = EpicController.date(body.workDate());
         if (day.getDayOfWeek() != DayOfWeek.SATURDAY && day.getDayOfWeek() != DayOfWeek.SUNDAY) {
             throw new ApiException(400, "Pick a Saturday or Sunday; the work week is Monday to Friday");

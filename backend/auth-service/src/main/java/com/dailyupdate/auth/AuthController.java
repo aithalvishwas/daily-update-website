@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +48,8 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> register(@Valid @RequestBody Requests.Register body, HttpServletRequest request) {
         limit(request);
-        User user = userService.create(body.name(), body.email(), body.password(), body.team(), body.position(), AuthUser.EMPLOYEE);
+        User user = userService.create(body.name(), body.email(), body.password(), body.team(), body.position(), body.office(),
+                AuthUser.EMPLOYEE);
         return session(user);
     }
 
@@ -74,6 +76,15 @@ public class AuthController {
         User user = users.findById(current.id()).filter(User::active)
                 .orElseThrow(() -> new ApiException(401, "This account is no longer active"));
         return Map.of("user", user.toPublic());
+    }
+
+    /** Your own settings: the office you work from, which decides your holidays. */
+    @PatchMapping("/me")
+    public Map<String, Object> updateMe(@RequestBody Requests.MySettings body) {
+        AuthUser current = SecuritySupport.currentUser();
+        users.findById(current.id()).filter(User::active)
+                .orElseThrow(() -> new ApiException(401, "This account is no longer active"));
+        return Map.of("user", users.setOffice(current.id(), Workplace.office(body.office())).toPublic());
     }
 
     private Map<String, Object> session(User user) {

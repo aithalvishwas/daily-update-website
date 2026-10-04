@@ -7,6 +7,7 @@ import { DatePicker } from '../components/Calendar.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { Badge, Empty, Modal, RequestStatus, Skeleton } from '../components/ui.jsx';
+import { useWorkplace } from '../workplace.js';
 
 const COMP = { comp_off: 'Comp-off day', paid: 'Overtime pay' };
 
@@ -226,6 +227,7 @@ function RequestCard({ token, request: r, manager, highlighted, onChanged, onSug
 
 export default function Requests({ token, user, id }) {
   const manager = isManager(user);
+  const { weekendRequests: enabled } = useWorkplace();
   const [requests, reload] = useLoad(() => api('/api/weekend-requests', { token }).then((d) => d.requests), [token]);
   const [tab, setTab] = useState(manager ? 'pending' : 'all');
   const [suggesting, setSuggesting] = useState(null);
@@ -284,7 +286,13 @@ export default function Requests({ token, user, id }) {
           </p>
         </div>
       </div>
-      {manager ? (
+      {!enabled && (
+        <p className="callout">
+          Comp-off and overtime pay requests are turned off, so every day of the week is a workday.
+          {manager ? ' You can still settle requests that were already sent.' : ' Your earlier requests are below.'}
+        </p>
+      )}
+      {manager || !enabled ? (
         list
       ) : (
         <div className="grid-side-main">

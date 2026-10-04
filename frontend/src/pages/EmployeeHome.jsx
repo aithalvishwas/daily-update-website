@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api.js';
-import { formatDate, isWeekend, localToday, workWeek } from '../format.js';
+import { formatDate, localToday } from '../format.js';
 import { announceChange, useLoad } from '../hooks.js';
 import { AttachmentIds, AttachmentPicker } from '../components/Attachments.jsx';
 import { Calendar, DatePicker } from '../components/Calendar.jsx';
@@ -9,6 +9,7 @@ import { useToast } from '../components/Toast.jsx';
 import { Badge, Empty, Skeleton, Stat } from '../components/ui.jsx';
 import { EpicCard } from './Epics.jsx';
 import { RaiseIssue } from './Issues.jsx';
+import { useWorkCalendar, useWorkplace } from '../workplace.js';
 
 const EMPTY = { tasks: '', hours: '', blockers: '', epicId: '' };
 
@@ -18,7 +19,9 @@ export default function EmployeeHome({ token, user }) {
   const [logs, reloadLogs] = useLoad(() => api('/api/logs/me', { token }).then((d) => d.logs), [token]);
   const [epics, reloadEpics] = useLoad(() => api('/api/epics', { token }).then((d) => d.epics), [token]);
   const [issues] = useLoad(() => api('/api/issues?status=open', { token }).then((d) => d.issues), [token]);
-  const [date, setDate] = useState(isWeekend(today) ? workWeek(today)[4] : today);
+  const work = useWorkCalendar();
+  const { weekendRequests } = useWorkplace();
+  const [date, setDate] = useState(work.isWeekendOff(today) ? work.weekDays(today)[4] : today);
   const [form, setForm] = useState(EMPTY);
   const [files, setFiles] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -44,15 +47,18 @@ export default function EmployeeHome({ token, user }) {
     }
   }, [date, logs, token]);
 
-  const week = workWeek(today);
+  const week = work.weekDays(today);
+  const workdays = work.workdays(today);
   const marks = useMemo(() => Object.fromEntries((logs ?? []).map((l) => [l.workDate, 'logged'])), [logs]);
   const stats = useMemo(() => {
     const inWeek = (logs ?? []).filter((l) => week.includes(l.workDate));
     return {
-      days: inWeek.length,
+      days: inWeek.filter((l) => workdays.includes(l.workDate)).length,
       hours: Math.round(inWeek.reduce((s, l) => s + (Number(l.hours) || 0), 0) * 10) / 10,
     };
-  }, [logs, week]);
+  }, [logs, week, workdays]);
+  const holidayToday = work.holiday(today);
+  const upcoming = work.upcoming(today);
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   const editing = (logs ?? []).some((l) => l.workDate === date);
@@ -104,7 +110,9 @@ export default function EmployeeHome({ token, user }) {
         <div>
           <h1>Hi {user.name.split(' ')[0]} 👋</h1>
           <p className="muted">
-            {isWeekend(today)
+            {holidayToday
+              ? `Today is ${holidayToday}, a holiday at your office. Enjoy the day off!`
+              : work.isWeekendOff(today)
               ? "It's the weekend. If you worked today, you can ask for a comp-off day or overtime pay."
               : loggedToday
                 ? "Today's update is in. Nice work!"
@@ -117,7 +125,7 @@ export default function EmployeeHome({ token, user }) {
       </div>
 
       <div className="stats-row">
-        <Stat label="Workdays logged this week" value={`${stats.days}/5`} tone="blue" icon={<Icon name="calendar" />} />
+        <Stat label="Workdays logged this week" value={`${stats.days}/${workdays.length}`} tone="blue" icon={<Icon name="calendar" />} />
         <Stat label="Hours this week" value={stats.hours} tone="green" icon={<Icon name="clock" />} />
         <Stat label="My active epics" value={epics ? activeEpics.length : '–'} tone="purple" icon={<Icon name="epics" />} />
         <Stat label="My open issues" value={issues ? issues.length : '–'} tone="red" icon={<Icon name="alert" />} />
@@ -145,11 +153,17 @@ export default function EmployeeHome({ token, user }) {
               </select>
             </label>
           </div>
-          {isWeekend(date) && (
+          {work.holiday(date) ? (
             <p className="callout">
-              {formatDate(date, { weekday: 'long' })} is outside the Mon–Fri work week.{' '}
-              <a href={`#/requests?date=${date}`}>Request a comp-off day or overtime pay</a>
+              {formatDate(date, { weekday: 'long', month: 'long', day: 'numeric' })} is {work.holiday(date)}, a holiday at your office.
             </p>
+          ) : (
+            work.isWeekendOff(date) && (
+              <p className="callout">
+                {formatDate(date, { weekday: 'long' })} is outside the Mon–Fri work week.{' '}
+                {weekendRequests && <a href={`#/requests?date=${date}`}>Request a comp-off day or overtime pay</a>}
+              </p>
+            )
           )}
           <label>
             What did you work on?
@@ -178,12 +192,19 @@ export default function EmployeeHome({ token, user }) {
         <div className="stack">
           <section className="card">
             <h2 className="card-title">This week</h2>
-            <ul className="week-strip">
+            <ul className="week-strip" style={{ '--days': week.length }}>
               {week.map((d) => {
                 const done = Boolean(marks[d]);
+                const holiday = work.holiday(d);
                 return (
                   <li key={d}>
-                    <button type="button" className={`week-day ${done ? 'done' : ''} ${d === date ? 'selected' : ''}`} onClick={() => setDate(d)} disabled={d > today}>
+                    <button
+                      type="button"
+                      className={`week-day ${done ? 'done' : holiday ? 'holiday' : ''} ${d === date ? 'selected' : ''}`}
+                      onClick={() => setDate(d)}
+                      disabled={d > today}
+                      title={holiday ?? undefined}
+                    >
                       <span>{formatDate(d, { weekday: 'short' })}</span>
                       <strong>{done ? '✓' : formatDate(d, { day: 'numeric' })}</strong>
                     </button>
@@ -196,9 +217,35 @@ export default function EmployeeHome({ token, user }) {
             <h2 className="card-title">Calendar</h2>
             <Calendar value={date} onChange={setDate} max={today} marks={marks} />
             <p className="muted small calendar-legend">
-              <span className="legend-dot" /> update saved · weekends shaded
+              <span className="legend-dot" /> update saved <span className="legend-holiday" /> holiday
+              {work.weekendsOff && ' · weekends shaded'}
             </p>
+            {!user.office && (
+              <p className="muted small">
+                Pick your office in <a href="#/settings">your settings</a> to see your local holidays.
+              </p>
+            )}
           </section>
+          {upcoming.length > 0 && (
+            <section className="card">
+              <h2 className="card-title">Upcoming holidays{user.office ? ` · ${user.office}` : ''}</h2>
+              <ul className="holiday-list">
+                {upcoming.map((h) => (
+                  <li key={h.date} className="holiday-item">
+                    <span className="holiday-date">
+                      <strong>{formatDate(h.date, { day: 'numeric' })}</strong>
+                      <span>{formatDate(h.date, { month: 'short' })}</span>
+                    </span>
+                    <span>
+                      <strong>{h.name}</strong>
+                      <br />
+                      <span className="muted small">{formatDate(h.date, { weekday: 'long' })}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
 

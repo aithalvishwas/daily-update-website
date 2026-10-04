@@ -21,13 +21,19 @@ public class UserService {
     }
 
     public User create(String name, String email, String password, String team, String position, String role) {
+        return create(name, email, password, team, position, null, role);
+    }
+
+    public User create(String name, String email, String password, String team, String position, String office,
+            String role) {
+        String cleanOffice = Workplace.office(office);
         String cleanTeam = blankToNull(team);
         if (cleanTeam != null) {
             teams.ensure(cleanTeam);
         }
         try {
             return users.insert(name.trim(), normalizeEmail(email), passwordEncoder.encode(password), role, cleanTeam,
-                    blankToNull(position));
+                    blankToNull(position), cleanOffice);
         } catch (DuplicateKeyException e) {
             throw new ApiException(409, "Email already registered");
         }
@@ -45,7 +51,8 @@ public class UserService {
     }
 
     /** Admins: change anything about an account, including the login email. */
-    public User updateAccount(long id, String name, String email, String team, String position, String role) {
+    public User updateAccount(long id, String name, String email, String team, String position, String office,
+            String role) {
         User current = users.findById(id).orElseThrow(() -> new ApiException(404, "User not found"));
         String cleanTeam = team == null ? current.team() : blankToNull(team);
         if (cleanTeam != null) {
@@ -62,6 +69,7 @@ public class UserService {
                     email == null || email.isBlank() ? current.email() : normalizeEmail(email),
                     cleanTeam,
                     position == null ? current.position() : blankToNull(position),
+                    office == null ? current.office() : Workplace.office(office),
                     newRole);
         } catch (DuplicateKeyException e) {
             throw new ApiException(409, "Another account already uses that email");

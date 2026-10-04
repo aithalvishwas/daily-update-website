@@ -56,7 +56,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> create(@Valid @RequestBody Requests.CreateUser body) {
         User user = userService.create(body.name(), body.email(), body.password(), body.team(), body.position(),
-                roleOrDefault(body.role()));
+                body.office(), roleOrDefault(body.role()));
         return Map.of("user", user.toPublic());
     }
 

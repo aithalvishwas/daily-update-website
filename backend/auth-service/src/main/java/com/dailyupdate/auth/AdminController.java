@@ -42,7 +42,7 @@ public class AdminController {
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> create(@Valid @RequestBody Requests.CreateUser body) {
         User user = userService.create(body.name(), body.email(), body.password(), body.team(), body.position(),
-                role(body.role() == null ? AuthUser.EMPLOYEE : body.role()));
+                body.office(), role(body.role() == null ? AuthUser.EMPLOYEE : body.role()));
         return Map.of("user", user.toPublic());
     }
 
@@ -55,7 +55,7 @@ public class AdminController {
         }
         String role = body.role() == null ? null : role(body.role());
         return Map.of("user", userService.updateAccount(id, body.name(), body.email(), body.team(), body.position(),
-                role).toPublic());
+                body.office(), role).toPublic());
     }
 
     @PostMapping("/{id}/password")

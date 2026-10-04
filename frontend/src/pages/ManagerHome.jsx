@@ -1,5 +1,6 @@
 import { api } from '../api.js';
-import { formatDate, isWeekend, localToday, timeAgo } from '../format.js';
+import { formatDate, localToday, timeAgo } from '../format.js';
+import { useWorkCalendar } from '../workplace.js';
 import { useLoad } from '../hooks.js';
 import Avatar from '../components/Avatar.jsx';
 import Icon from '../components/Icon.jsx';
@@ -10,6 +11,7 @@ const RISK = { overdue: 0, at_risk: 1, on_track: 2, done: 3 };
 
 export default function ManagerHome({ token, user }) {
   const today = localToday();
+  const work = useWorkCalendar();
   const [data] = useLoad(async () => {
     const [epics, issues, requests, people, overview] = await Promise.all([
       api('/api/epics', { token }),
@@ -131,6 +133,7 @@ export default function ManagerHome({ token, user }) {
             )}
           </section>
 
+          {(work.weekendsOff || data.requests.length > 0) && (
           <section className="card">
             <div className="card-head">
               <h2>Weekend requests</h2>
@@ -155,12 +158,13 @@ export default function ManagerHome({ token, user }) {
               </ul>
             )}
           </section>
+          )}
 
           <section className="card">
             <div className="card-head">
               <h2>Updates today</h2>
               <span className="muted small">
-                {isWeekend(today) ? 'Weekend' : `${updatedToday.length} of ${data.people.length}`}
+                {work.isWeekendOff(today) ? 'Weekend' : `${updatedToday.length} of ${data.people.length}`}
               </span>
             </div>
             {data.people.length === 0 ? (

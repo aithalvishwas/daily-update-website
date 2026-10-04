@@ -6,6 +6,7 @@ import Avatar from '../components/Avatar.jsx';
 import Icon from '../components/Icon.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { Badge, Empty, Modal, Skeleton, Stat } from '../components/ui.jsx';
+import { useWorkplace } from '../workplace.js';
 
 const POSITIONS = ['Intern', 'Junior Engineer', 'Engineer', 'Senior Engineer', 'Lead Engineer', 'Designer', 'QA Engineer', 'Product Manager', 'Manager', 'Director'];
 const ROLE_TONE = { admin: 'red', manager: 'purple', employee: 'gray' };
@@ -18,6 +19,7 @@ function randomPassword() {
 
 function AccountForm({ token, account, teams, onClose, onSaved }) {
   const toast = useToast();
+  const { offices } = useWorkplace();
   const [busy, setBusy] = useState(false);
   const [password, setPassword] = useState(() => (account ? '' : randomPassword()));
 
@@ -72,6 +74,17 @@ function AccountForm({ token, account, teams, onClose, onSaved }) {
             </datalist>
           </label>
         </div>
+        <label>
+          <span>
+            Office <span className="optional">sets their holidays</span>
+          </span>
+          <select name="office" defaultValue={account?.office ?? ''}>
+            <option value="">Not set</option>
+            {offices.map((o) => (
+              <option key={o}>{o}</option>
+            ))}
+          </select>
+        </label>
         <label>
           Access
           <select name="role" defaultValue={account?.role ?? 'employee'}>
@@ -211,7 +224,7 @@ export default function Admin({ token, user }) {
       (a) =>
         (!role || a.role === role) &&
         (status === 'all' || (status === 'active') === a.active) &&
-        [a.name, a.email, a.team ?? '', a.position ?? ''].some((v) => v.toLowerCase().includes(q)),
+        [a.name, a.email, a.team ?? '', a.position ?? '', a.office ?? ''].some((v) => v.toLowerCase().includes(q)),
     );
   }, [accounts, query, role, status]);
 
@@ -286,6 +299,7 @@ export default function Admin({ token, user }) {
                   <th>Access</th>
                   <th>Position</th>
                   <th>Team</th>
+                  <th>Office</th>
                   <th>Status</th>
                   <th aria-label="Actions" />
                 </tr>
@@ -310,6 +324,7 @@ export default function Admin({ token, user }) {
                     </td>
                     <td>{a.position || <span className="muted">—</span>}</td>
                     <td>{a.team ? <Badge tone="blue">{a.team}</Badge> : <span className="muted">—</span>}</td>
+                    <td>{a.office || <span className="muted">—</span>}</td>
                     <td>{a.active ? <span className="dot-label dot-green">Active</span> : <span className="dot-label dot-gray">Deactivated</span>}</td>
                     <td>
                       <span className="row-actions">

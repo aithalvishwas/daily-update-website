@@ -3,6 +3,7 @@ import { ROLE_LABEL } from '../format.js';
 import Avatar from './Avatar.jsx';
 import Icon from './Icon.jsx';
 import NotificationBell from './NotificationBell.jsx';
+import { useWorkplace } from '../workplace.js';
 
 const NAV = {
   manager: [
@@ -23,7 +24,12 @@ const NAV = {
 /** Work-app layout: navy sidebar on the left, header with alerts on top. */
 export default function Shell({ user, token, section, counts = {}, onSignOut, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const nav = user.role === 'admin' ? [...NAV.manager, ['admin', 'Accounts', 'shield']] : NAV[user.role] ?? NAV.employee;
+  const { weekendRequests } = useWorkplace();
+  const nav = (
+    user.role === 'admin'
+      ? [...NAV.manager, ['admin', 'Accounts', 'shield'], ['workplace', 'Holidays & settings', 'flag']]
+      : NAV[user.role] ?? NAV.employee
+  ).filter(([path]) => path !== 'requests' || weekendRequests || counts.requests > 0);
 
   return (
     <div className={`shell ${menuOpen ? 'menu-open' : ''}`}>
@@ -48,7 +54,7 @@ export default function Shell({ user, token, section, counts = {}, onSignOut, ch
           ))}
         </nav>
         <div className="sidebar-foot">
-          <span className="muted-inverse small">Mon–Fri work week</span>
+          <span className="muted-inverse small">{weekendRequests ? 'Mon–Fri work week' : '7-day work week'}</span>
         </div>
       </aside>
       <div className="shell-scrim" onClick={() => setMenuOpen(false)} aria-hidden="true" />
@@ -61,11 +67,13 @@ export default function Shell({ user, token, section, counts = {}, onSignOut, ch
           <div className="header-spacer" />
           <NotificationBell token={token} />
           <div className="header-user">
-            <Avatar name={user.name} size={34} />
-            <div className="header-name">
-              <strong>{user.name}</strong>
-              <span className="muted small">{user.position || ROLE_LABEL[user.role]}</span>
-            </div>
+            <a href="#/settings" className="header-user-button" title="My settings">
+              <Avatar name={user.name} size={34} />
+              <span className="header-name">
+                <strong>{user.name}</strong>
+                <span className="muted small">{[user.position || ROLE_LABEL[user.role], user.office].filter(Boolean).join(' · ')}</span>
+              </span>
+            </a>
           </div>
           <button type="button" className="icon-btn" onClick={onSignOut} aria-label="Log out" title="Log out">
             <Icon name="logout" size={20} />

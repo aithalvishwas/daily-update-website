@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isManager } from './format.js';
 import { api, loadSession, saveSession, setUnauthorizedHandler } from './api.js';
 import { useRoute } from './router.js';
@@ -12,6 +12,9 @@ import People from './pages/People.jsx';
 import Issues from './pages/Issues.jsx';
 import Requests from './pages/Requests.jsx';
 import Admin from './pages/Admin.jsx';
+import WorkplaceSettings from './pages/WorkplaceSettings.jsx';
+import MySettings from './pages/MySettings.jsx';
+import { OFFICES, WorkplaceContext } from './workplace.js';
 
 // Sidebar badges: what is waiting for this person.
 function useCounts(session, path) {
@@ -43,7 +46,7 @@ function useCounts(session, path) {
   return counts;
 }
 
-function Page({ session, path }) {
+function Page({ session, path, onUserChanged }) {
   const { token, user } = session;
   const manager = isManager(user);
   const [section, id] = path;
@@ -58,15 +61,44 @@ function Page({ session, path }) {
       return <Requests token={token} user={user} id={id} />;
     case 'admin':
       return user.role === 'admin' ? <Admin token={token} user={user} /> : <ManagerHome token={token} user={user} />;
+    case 'settings':
+      return <MySettings token={token} user={user} onUserChanged={onUserChanged} />;
+    case 'workplace':
+      return user.role === 'admin' ? <WorkplaceSettings token={token} /> : <ManagerHome token={token} user={user} />;
     default:
       return manager ? <ManagerHome token={token} user={user} /> : <EmployeeHome token={token} user={user} />;
   }
+}
+
+// Feature flags and office holidays, shared by every page through WorkplaceContext.
+function useWorkplaceData(token) {
+  const [data, setData] = useState(null);
+  const reload = useCallback(() => {
+    if (!token) return Promise.resolve();
+    return api('/api/workplace', { token })
+      .then(setData)
+      // Without it the app still works: a 7-day week with no holidays shown.
+      .catch(() => setData((current) => current ?? { weekendRequests: false, offices: OFFICES, holidays: [] }));
+  }, [token]);
+  useEffect(() => {
+    setData(null);
+    reload();
+    window.addEventListener('focus', reload);
+    return () => window.removeEventListener('focus', reload);
+  }, [reload]);
+  return [data, reload];
 }
 
 export default function App() {
   const [session, setSession] = useState(loadSession);
   const path = useRoute();
   const counts = useCounts(session, path.join('/'));
+  const [workplaceData, reloadWorkplace] = useWorkplaceData(session?.token);
+  const office = session?.user.office ?? null;
+  const workplace = useMemo(
+    () => (workplaceData ? { ...workplaceData, office, reload: reloadWorkplace } : null),
+    [workplaceData, office, reloadWorkplace],
+  );
 
   const signIn = useCallback((next) => {
     saveSession(next);
@@ -80,6 +112,15 @@ export default function App() {
   }, []);
 
   useEffect(() => setUnauthorizedHandler(signOut), [signOut]);
+
+  const updateUser = useCallback((user) => {
+    setSession((current) => {
+      if (!current) return current;
+      const next = { ...current, user };
+      saveSession(next);
+      return next;
+    });
+  }, []);
 
   // Re-read the account on load and when the tab regains focus: picks up a new team or position,
   // and signs out an account whose role changed or that an admin deactivated (the API answers 401).
@@ -111,10 +152,14 @@ export default function App() {
     <ToastProvider>
       {!session ? (
         <AuthPage onSignedIn={signIn} />
+      ) : !workplace ? (
+        <div className="boot" aria-busy="true" />
       ) : (
-        <Shell user={session.user} token={session.token} section={path[0] ?? ''} counts={counts} onSignOut={signOut}>
-          <Page session={session} path={path} />
-        </Shell>
+        <WorkplaceContext.Provider value={workplace}>
+          <Shell user={session.user} token={session.token} section={path[0] ?? ''} counts={counts} onSignOut={signOut}>
+            <Page session={session} path={path} onUserChanged={updateUser} />
+          </Shell>
+        </WorkplaceContext.Provider>
       )}
     </ToastProvider>
   );

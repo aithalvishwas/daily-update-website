@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatDate, toIso } from '../format.js';
 import Icon from './Icon.jsx';
+import { useWorkCalendar } from '../workplace.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /**
- * Month calendar. Weeks start on Monday; Saturday and Sunday are shaded because the work week is
- * Monday to Friday. {@code marks} maps an ISO date to a dot style ("logged", "weekend").
+ * Month calendar. Weeks start on Monday. Office holidays are highlighted (for {@code office}, or the
+ * signed-in person's office), and Saturday and Sunday are shaded when the work week is Monday to
+ * Friday. {@code marks} maps an ISO date to a dot style ("logged").
  */
-export function Calendar({ value, onChange, min, max, marks = {}, disabled }) {
+export function Calendar({ value, onChange, min, max, marks = {}, disabled, office }) {
+  const work = useWorkCalendar(office);
   const [month, setMonth] = useState(() => (value || (min && min > toIso(new Date()) ? min : toIso(new Date()))).slice(0, 7));
   useEffect(() => {
     if (value) setMonth(value.slice(0, 7));
@@ -41,14 +44,15 @@ export function Calendar({ value, onChange, min, max, marks = {}, disabled }) {
       </div>
       <div className="calendar-grid" role="grid">
         {WEEKDAYS.map((w, i) => (
-          <span key={w} className={`calendar-weekday ${i > 4 ? 'is-weekend' : ''}`}>
+          <span key={w} className={`calendar-weekday ${i > 4 && work.weekendsOff ? 'is-weekend' : ''}`}>
             {w}
           </span>
         ))}
         {cells.map((iso, i) => {
           if (!iso) return <span key={`blank-${i}`} />;
           const off = (min && iso < min) || (max && iso > max) || (disabled && disabled(iso));
-          const weekend = i % 7 >= 5;
+          const weekend = work.isWeekendOff(iso);
+          const holiday = work.holiday(iso);
           return (
             <button
               key={iso}
@@ -57,6 +61,7 @@ export function Calendar({ value, onChange, min, max, marks = {}, disabled }) {
               className={[
                 'calendar-day',
                 weekend && 'is-weekend',
+                holiday && 'is-holiday',
                 iso === today && 'is-today',
                 iso === value && 'is-selected',
                 marks[iso] && `mark-${marks[iso]}`,
@@ -65,7 +70,8 @@ export function Calendar({ value, onChange, min, max, marks = {}, disabled }) {
                 .join(' ')}
               onClick={() => onChange(iso)}
               aria-pressed={iso === value}
-              aria-label={formatDate(iso, { weekday: 'long', month: 'long', day: 'numeric' })}
+              title={holiday ?? undefined}
+              aria-label={formatDate(iso, { weekday: 'long', month: 'long', day: 'numeric' }) + (holiday ? `, holiday: ${holiday}` : '')}
             >
               {Number(iso.slice(8))}
             </button>
@@ -77,7 +83,7 @@ export function Calendar({ value, onChange, min, max, marks = {}, disabled }) {
 }
 
 /** A date field that opens the calendar in a small popover. */
-export function DatePicker({ value, onChange, min, max, disabled, label = 'Date', marks }) {
+export function DatePicker({ value, onChange, min, max, disabled, label = 'Date', marks, office }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
   useEffect(() => {
@@ -109,6 +115,7 @@ export function DatePicker({ value, onChange, min, max, disabled, label = 'Date'
             max={max}
             disabled={disabled}
             marks={marks}
+            office={office}
             onChange={(iso) => {
               onChange(iso);
               setOpen(false);

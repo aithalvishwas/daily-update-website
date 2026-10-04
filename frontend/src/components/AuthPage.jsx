@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { api } from '../api.js';
 import { useToast } from './Toast.jsx';
 import Logo from './Logo.jsx';
+import { OFFICES } from '../workplace.js';
 
 // three.js is large, so the 3D scene loads in its own chunk after the form is usable.
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
@@ -103,6 +104,17 @@ export default function AuthPage({ onSignedIn }) {
                   <input name="position" maxLength={100} />
                 </label>
               </div>
+            )}
+            {tab === 'register' && (
+              <label>
+                <span>Office <span className="optional">for your holiday calendar</span></span>
+                <select name="office" defaultValue="">
+                  <option value="">Choose later</option>
+                  {OFFICES.map((o) => (
+                    <option key={o}>{o}</option>
+                  ))}
+                </select>
+              </label>
             )}
             <label>
               Password

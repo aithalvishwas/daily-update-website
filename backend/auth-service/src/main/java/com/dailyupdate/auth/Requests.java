@@ -17,7 +17,8 @@ final class Requests {
             @NotBlank(message = "Password must be 8 to 128 characters")
             @Size(min = 8, max = 128, message = "Password must be 8 to 128 characters") String password,
             @Size(max = 100, message = "Team must be at most 100 characters") String team,
-            @Size(max = 100, message = "Position must be at most 100 characters") String position) {}
+            @Size(max = 100, message = "Position must be at most 100 characters") String position,
+            String office) {}
 
     record CreateUser(
             @NotBlank(message = "Name is required (max 100 characters)")
@@ -29,6 +30,7 @@ final class Requests {
             @Size(min = 8, max = 128, message = "Password must be 8 to 128 characters") String password,
             @Size(max = 100, message = "Team must be at most 100 characters") String team,
             @Size(max = 100, message = "Position must be at most 100 characters") String position,
+            String office,
             String role) {}
 
     record UpdateUser(
@@ -42,6 +44,7 @@ final class Requests {
             @Size(max = 255, message = "A valid email is required") String email,
             @Size(max = 100, message = "Team must be at most 100 characters") String team,
             @Size(max = 100, message = "Position must be at most 100 characters") String position,
+            String office,
             String role) {}
 
     record ResetPassword(
@@ -51,6 +54,16 @@ final class Requests {
     record CreateTeam(
             @NotBlank(message = "Team name is required")
             @Size(max = 100, message = "Team name must be at most 100 characters") String name) {}
+
+    record Holiday(
+            String city,
+            @NotBlank(message = "Pick a date") String date,
+            @NotBlank(message = "Holiday name is required (max 100 characters)")
+            @Size(max = 100, message = "Holiday name is required (max 100 characters)") String name) {}
+
+    record Settings(Boolean weekendRequests) {}
+
+    record MySettings(String office) {}
 
     record Login(String email, String password) {}
 }

@@ -1,5 +1,6 @@
 package com.dailyupdate.auth;
 
+import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class UserRepository {
 
-    private static final String COLUMNS = "id, name, email, password_hash, role, team, position, active";
+    private static final String COLUMNS = "id, name, email, password_hash, role, team, position, office, active";
 
     private final JdbcClient jdbc;
 
@@ -79,16 +80,27 @@ public class UserRepository {
                 .single();
     }
 
-    public User updateAccount(long id, String name, String email, String team, String position, String role) {
+    public User updateAccount(long id, String name, String email, String team, String position, String office,
+            String role) {
         return jdbc.sql("""
-                        UPDATE users SET name = :name, email = :email, team = :team, position = :position, role = :role
+                        UPDATE users SET name = :name, email = :email, team = :team, position = :position,
+                            office = :office, role = :role
                         WHERE id = :id RETURNING """ + " " + COLUMNS)
+                .param("office", office, Types.VARCHAR)
                 .param("id", id)
                 .param("name", name)
                 .param("email", email)
                 .param("team", team)
                 .param("position", position)
                 .param("role", role)
+                .query(User.class)
+                .single();
+    }
+
+    public User setOffice(long id, String office) {
+        return jdbc.sql("UPDATE users SET office = :office WHERE id = :id RETURNING " + COLUMNS)
+                .param("id", id)
+                .param("office", office, Types.VARCHAR)
                 .query(User.class)
                 .single();
     }
@@ -105,11 +117,13 @@ public class UserRepository {
                 .single();
     }
 
-    public User insert(String name, String email, String passwordHash, String role, String team, String position) {
+    public User insert(String name, String email, String passwordHash, String role, String team, String position,
+            String office) {
         return jdbc.sql("""
-                        INSERT INTO users (name, email, password_hash, role, team, position)
-                        VALUES (:name, :email, :hash, :role, :team, :position)
+                        INSERT INTO users (name, email, password_hash, role, team, position, office)
+                        VALUES (:name, :email, :hash, :role, :team, :position, :office)
                         RETURNING """ + " " + COLUMNS)
+                .param("office", office, Types.VARCHAR)
                 .param("name", name)
                 .param("email", email)
                 .param("hash", passwordHash)

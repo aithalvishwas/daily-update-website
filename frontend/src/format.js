@@ -39,30 +39,6 @@ export function isWeekend(iso) {
   return day === 0 || day === 6;
 }
 
-/** Monday to Friday of the week that contains {@code iso}. */
-export function workWeek(iso) {
-  const d = new Date(`${iso}T00:00:00`);
-  const offset = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - offset);
-  return Array.from({ length: 5 }, (_, i) => {
-    const day = new Date(d);
-    day.setDate(d.getDate() + i);
-    return toIso(day);
-  });
-}
-
-/** Mon–Fri days after {@code fromIso} and before {@code untilIso}: workdays with no update. */
-export function workdaysMissed(fromIso, untilIso) {
-  let count = 0;
-  const d = new Date(`${fromIso}T00:00:00`);
-  d.setDate(d.getDate() + 1);
-  while (toIso(d) < untilIso) {
-    if (!isWeekend(toIso(d))) count += 1;
-    d.setDate(d.getDate() + 1);
-  }
-  return count;
-}
-
 export function timeAgo(timestamp) {
   const seconds = Math.round((Date.now() - new Date(timestamp).getTime()) / 1000);
   if (seconds < 60) return 'just now';
