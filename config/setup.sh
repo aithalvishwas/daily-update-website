@@ -23,7 +23,7 @@ random() { openssl rand -hex "$1"; }
 
 # Older .env files have no admin settings yet; add them.
 if ! grep -q '^ADMIN_EMAIL=' "$ENV_FILE"; then
-  printf '\n# First admin account (manages every account). Created on first start if no admin exists.\nADMIN_NAME=Admin\nADMIN_EMAIL=admin@workpulselens.com\nADMIN_PASSWORD=change-me-please\n' >> "$ENV_FILE"
+  printf '\n# First admin account (manages every account). Created on first start if no admin exists.\nADMIN_NAME=Vishwas\nADMIN_EMAIL=vishwas@workpulselens.com\nADMIN_PASSWORD=change-me-please\n' >> "$ENV_FILE"
   echo "Added admin settings to config/.env"
 fi
 

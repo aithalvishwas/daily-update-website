@@ -2,7 +2,7 @@
 # Puts WorkPulseLens live on your domain with HTTPS. Run it ON THE SERVER
 # (Ubuntu 22.04 or 24.04), from the repository folder:
 #   sudo ./config/deploy.sh workpulselens.com
-# Optionally pass the first admin's login email (default admin@workpulselens.com):
+# Optionally pass the first admin's login email (default vishwas@workpulselens.com):
 #   sudo ./config/deploy.sh workpulselens.com you@workpulselens.com
 # Run it again after `git pull` to update; your data is kept.
 set -eu
