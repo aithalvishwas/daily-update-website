@@ -14,6 +14,10 @@ WorkPulseLens is a work app for teams: employees log what they did each day agai
 
 ![Admin accounts page](docs/admin.png)
 
+The public landing page at workpulselens.com (signed-out visitors land here; *Sign in* and *Get started* open the login and sign-up forms):
+
+![WorkPulseLens landing page](docs/landing.png)
+
 The login page keeps the three.js 3D scene:
 
 ![Login page with the 3D scene](docs/login.png)
@@ -142,6 +146,10 @@ docker compose -f config/docker-compose.yml up -d --build
 Open http://localhost:8080. Log in as the admin or manager from `config/.env`, or use **Sign up** to create employee accounts.
 
 Stop with `docker compose -f config/docker-compose.yml down` (add `-v` to also delete the database).
+
+## Put it live on your domain
+
+To run WorkPulseLens on `workpulselens.com` with HTTPS, follow [docs/DEPLOY.md](docs/DEPLOY.md): create a small Ubuntu server, point the domain's DNS at it, and run `sudo ./config/deploy.sh workpulselens.com` there.
 
 ## Develop without Docker
 
