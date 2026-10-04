@@ -1,0 +1,41 @@
+# Production overrides: serve WorkPulseLens on your domain over HTTPS.
+# Use together with docker-compose.yml (config/deploy.sh does this for you):
+#   docker compose -f config/docker-compose.yml -f config/docker-compose.prod.yml up -d --build
+
+x-logs: &logs
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in config/.env, for example workpulselens.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [frontend]
+    networks: [backend]
+    logging: *logs
+
+  # Keep the database and services from filling the disk with logs.
+  db: { logging: *logs }
+  auth-service: { logging: *logs }
+  worklog-service: { logging: *logs }
+  summary-service: { logging: *logs }
+  project-service: { logging: *logs }
+
+  # Only Caddy talks to the website; port 8080 is not opened to the internet.
+  frontend:
+    ports: !reset []
+    logging: *logs
+
+volumes:
+  caddy-data:
+  caddy-config:
