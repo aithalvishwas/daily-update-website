@@ -35,10 +35,10 @@ awk -v db="$DB_PASSWORD" -v jwt="$JWT" -v mpw="$MANAGER_PW" -v apw="$ADMIN_PW" '
 ' "$ENV_FILE" > "$ENV_FILE.tmp" && mv "$ENV_FILE.tmp" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
 
-echo "config/.env is ready."
+echo "WorkPulseLens: config/.env is ready."
 echo "Admin login:   $(grep '^ADMIN_EMAIL=' "$ENV_FILE" | cut -d= -f2-) / $(grep '^ADMIN_PASSWORD=' "$ENV_FILE" | cut -d= -f2-)"
 echo "Manager login: $(grep '^MANAGER_EMAIL=' "$ENV_FILE" | cut -d= -f2-) / $(grep '^MANAGER_PASSWORD=' "$ENV_FILE" | cut -d= -f2-)"
 if ! grep -q '^ANTHROPIC_API_KEY=.' "$ENV_FILE"; then
   echo "Tip: add your ANTHROPIC_API_KEY to config/.env for AI summaries (optional)."
 fi
-echo "Start the app with: docker compose -f config/docker-compose.yml up -d --build"
+echo "Start WorkPulseLens with: docker compose -f config/docker-compose.yml up -d --build"

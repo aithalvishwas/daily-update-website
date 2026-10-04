@@ -15,7 +15,7 @@
   <artifactId>backend</artifactId>
   <version>1.0.0</version>
   <packaging>pom</packaging>
-  <name>Daily Update backend</name>
+  <name>WorkPulseLens backend</name>
 
   <modules>
     <module>common</module>

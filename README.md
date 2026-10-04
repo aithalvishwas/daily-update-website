@@ -1,6 +1,6 @@
-# Daily Update Website
+# WorkPulseLens
 
-A work app for teams: employees log what they did each day against the epics they work on, raise blockers and deadline problems, and claim weekend work; managers see whether every epic is on track, answer blockers, approve requests, and read an AI-written summary of each person's work. No email involved: alerts show up in the website's notification bell.
+WorkPulseLens is a work app for teams: employees log what they did each day against the epics they work on, raise blockers and deadline problems, and claim weekend work; managers see whether every epic is on track, answer blockers, approve requests, and read an AI-written summary of each person's work. No email involved: alerts show up in the website's notification bell.
 
 ![Manager dashboard: epics, deadlines, health and alerts](docs/manager-dashboard.png)
 
@@ -8,7 +8,7 @@ A work app for teams: employees log what they did each day against the epics the
 |---|---|
 | ![Employee daily update with calendar and epics](docs/employee.png) | ![Epic with progress, people and daily updates](docs/epic.png) |
 | **Blocker conversation** | **Weekend requests and alerts** |
-| ![Manager replying to a blocker with an attachment](docs/issue.png) | ![Weekend requests with the notification panel open](docs/requests.png) |
+| ![Blocker and deadline issues inbox with a conversation open](docs/issue.png) | ![Weekend requests with the notification panel open](docs/requests.png) |
 
 **Admin: accounts**
 

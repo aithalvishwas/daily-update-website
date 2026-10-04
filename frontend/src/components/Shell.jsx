@@ -36,7 +36,7 @@ export default function Shell({ user, token, section, counts = {}, onSignOut, ch
       <aside className="sidebar">
         <a className="sidebar-brand" href="#/">
           <img src="/favicon.svg" alt="" width="30" height="30" />
-          <span>Daily Update</span>
+          <span>WorkPulseLens</span>
         </a>
         <nav className="sidebar-nav" aria-label="Main">
           {nav.map(([path, label, icon]) => (
