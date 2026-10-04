@@ -1,0 +1,35 @@
+server:
+  port: ${PORT:4001}
+  error:
+    include-message: never
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+  sql:
+    init:
+      mode: always
+  jackson:
+    default-property-inclusion: always
+app:
+  jwt:
+    secret: ${JWT_SECRET:}
+    ttl-hours: ${JWT_TTL_HOURS:8}
+  admin:
+    name: ${ADMIN_NAME:Admin}
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+  manager:
+    name: ${MANAGER_NAME:Manager}
+    email: ${MANAGER_EMAIL:}
+    password: ${MANAGER_PASSWORD:}
+  rate-limit:
+    credentials-per-15-min: ${AUTH_RATE_LIMIT:20}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.1</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.dailyupdate</groupId>
+  <artifactId>backend</artifactId>
+  <version>1.0.0</version>
+  <packaging>pom</packaging>
+  <name>WorkPulseLens backend</name>
+
+  <modules>
+    <module>common</module>
+    <module>auth-service</module>
+    <module>worklog-service</module>
+    <module>summary-service</module>
+    <module>project-service</module>
+  </modules>
+
+  <properties>
+    <java.version>21</java.version>
+    <jjwt.version>0.13.0</jjwt.version>
+    <anthropic.version>2.68.0</anthropic.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.dailyupdate</groupId>
+        <artifactId>common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-gson</artifactId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.anthropic</groupId>
+        <artifactId>anthropic-java</artifactId>
+        <version>${anthropic.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
