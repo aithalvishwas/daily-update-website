@@ -110,6 +110,17 @@ public class WorkLogController {
         return Map.of("logs", logs.findForUser(userId, range[0], range[1]));
     }
 
+    /** Managers: hours everyone logged per day, for the timesheet (at most 31 days). */
+    @GetMapping("/timesheet")
+    public Map<String, List<WorkLogRepository.TimesheetEntry>> timesheet(@RequestParam String from,
+            @RequestParam String to) {
+        LocalDate[] range = range(from, to);
+        if (range[1].isAfter(range[0].plusDays(30))) {
+            throw new ApiException(400, "A timesheet covers at most 31 days");
+        }
+        return Map.of("entries", logs.timesheet(range[0], range[1]));
+    }
+
     /** Managers: daily updates linked to an epic. */
     @GetMapping("/epic/{epicId}")
     public Map<String, List<WorkLog>> forEpic(@PathVariable long epicId,

@@ -55,12 +55,16 @@ On the server:
 ```sh
 git clone https://github.com/aithalvishwas/daily-update-website.git
 cd daily-update-website
-sudo ./config/deploy.sh workpulselens.com
+sudo ./config/deploy.sh workpulselens.com vishwas@workpulselens.com
 ```
+
+The second part is the email you'll sign in with as the admin. If you leave it out, it's `vishwas@workpulselens.com`.
 
 The script installs Docker, opens only SSH, HTTP and HTTPS in the firewall, creates `config/.env` with strong random passwords, builds the app and starts it. The first build takes several minutes. At the end it prints the admin and manager logins: save them somewhere safe.
 
-Open <https://workpulselens.com>. Sign in as the admin, and on the **Accounts** page change the admin and manager emails to real ones.
+Open <https://workpulselens.com>. Sign in as the admin. On the **Accounts** page you can add people and give each one a role (employee, manager or admin), change anyone's role later with **Edit**, and change the manager login's email to a real one.
+
+To add Ram as an employee: on **Accounts**, choose **Add account**, enter name *Ram* and email `ram@workpulselens.com`, leave access on **Employee**, and save. Give Ram the temporary password it shows; Ram signs in at <https://workpulselens.com>.
 
 For AI summaries, add your key on the server (never paste it in chat or commit it), then run the deploy again:
 

@@ -16,6 +16,7 @@ export default defineConfig({
       '/api/logs': service(4002),
       '/api/summaries': service(4003),
       '/api/epics': service(4004),
+      '/api/tasks': service(4004),
       '/api/issues': service(4004),
       '/api/weekend-requests': service(4004),
       '/api/notifications': service(4004),

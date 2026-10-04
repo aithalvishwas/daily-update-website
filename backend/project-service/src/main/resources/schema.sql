@@ -87,3 +87,45 @@ CREATE TABLE IF NOT EXISTS attachments (
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS attachments_owner_idx ON attachments (owner_type, owner_id);
+
+-- Tasks on an epic, shown as a board (To do, In progress, In review, Done).
+CREATE TABLE IF NOT EXISTS tasks (
+    id              BIGSERIAL PRIMARY KEY,
+    epic_id         BIGINT NOT NULL REFERENCES epics (id) ON DELETE CASCADE,
+    title           VARCHAR(200) NOT NULL,
+    description     TEXT,
+    status          VARCHAR(20) NOT NULL DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'review', 'done')),
+    priority        VARCHAR(10) NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+    assignee_id     BIGINT,
+    assignee_name   VARCHAR(100),
+    due_date        DATE,
+    estimate_hours  NUMERIC(5, 1) CHECK (estimate_hours >= 0 AND estimate_hours <= 999),
+    created_by      BIGINT NOT NULL,
+    created_by_name VARCHAR(100) NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    completed_at    TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS tasks_epic_idx ON tasks (epic_id, status);
+CREATE INDEX IF NOT EXISTS tasks_assignee_idx ON tasks (assignee_id, status);
+
+CREATE TABLE IF NOT EXISTS task_comments (
+    id          BIGSERIAL PRIMARY KEY,
+    task_id     BIGINT NOT NULL REFERENCES tasks (id) ON DELETE CASCADE,
+    author_id   BIGINT NOT NULL,
+    author_name VARCHAR(100) NOT NULL,
+    body        TEXT NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS task_comments_task_idx ON task_comments (task_id, created_at);
+
+-- Milestones: dated checkpoints inside an epic.
+CREATE TABLE IF NOT EXISTS milestones (
+    id         BIGSERIAL PRIMARY KEY,
+    epic_id    BIGINT NOT NULL REFERENCES epics (id) ON DELETE CASCADE,
+    name       VARCHAR(150) NOT NULL,
+    due_date   DATE NOT NULL,
+    done       BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS milestones_epic_idx ON milestones (epic_id, due_date);

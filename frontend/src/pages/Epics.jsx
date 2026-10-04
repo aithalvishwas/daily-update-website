@@ -4,6 +4,8 @@ import { formatDate, isManager, localToday } from '../format.js';
 import { announceChange, useLoad } from '../hooks.js';
 import { navigate } from '../router.js';
 import { AttachmentIds } from '../components/Attachments.jsx';
+import Milestones from '../components/Milestones.jsx';
+import { TaskBoard } from '../components/Tasks.jsx';
 import Avatar from '../components/Avatar.jsx';
 import { DatePicker } from '../components/Calendar.jsx';
 import Icon from '../components/Icon.jsx';
@@ -41,6 +43,11 @@ export function EpicTable({ epics, compact }) {
                 <a href={`#/epics/${e.id}`} className="cell-title" onClick={(ev) => ev.stopPropagation()}>
                   {e.name}
                 </a>
+                {e.tasksTotal > 0 && (
+                  <span className="cell-sub">
+                    {e.tasksDone}/{e.tasksTotal} tasks done
+                  </span>
+                )}
                 {e.openIssues > 0 && (
                   <span className="cell-sub text-red">
                     {e.openIssues} open issue{e.openIssues === 1 ? '' : 's'}
@@ -237,6 +244,7 @@ export function EpicCard({ token, epic, onSaved }) {
       <ProgressUpdater key={epic.progress} token={token} epic={epic} onSaved={onSaved} />
       <div className="epic-card-foot">
         <MemberStack members={epic.members} max={5} />
+        {epic.tasksTotal > 0 && <span className="muted small">{epic.tasksDone}/{epic.tasksTotal} tasks</span>}
         {epic.openIssues > 0 && <Badge tone="red">{epic.openIssues} open</Badge>}
       </div>
     </article>
@@ -302,6 +310,8 @@ function EpicDetail({ token, user, id }) {
         )}
       </div>
 
+      <TaskBoard token={token} user={user} epic={epic} />
+
       <div className="grid-main-side">
         <div className="stack">
           <section className="card">
@@ -309,6 +319,7 @@ function EpicDetail({ token, user, id }) {
               <h2>Progress</h2>
               <span className="muted small">
                 {epic.progress}% done · {epic.expectedProgress}% of the time used
+                {epic.tasksTotal > 0 && ` · ${epic.tasksDone} of ${epic.tasksTotal} tasks done`}
               </span>
             </div>
             <Progress value={epic.progress} expected={epic.health === 'done' ? undefined : epic.expectedProgress} tone={FILL[epic.health]} />
@@ -354,6 +365,7 @@ function EpicDetail({ token, user, id }) {
         </div>
 
         <div className="stack">
+          <Milestones token={token} user={user} epic={epic} />
           <section className="card">
             <h2 className="card-title">People ({epic.members.length})</h2>
             {epic.members.length === 0 ? (

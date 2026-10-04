@@ -9,6 +9,8 @@ const NAV = {
   manager: [
     ['', 'Dashboard', 'home'],
     ['epics', 'Epics', 'epics'],
+    ['tasks', 'My tasks', 'check'],
+    ['workload', 'Timesheets & workload', 'clock'],
     ['people', 'People', 'people'],
     ['issues', 'Blockers & issues', 'alert'],
     ['requests', 'Weekend requests', 'calendar'],
@@ -16,6 +18,7 @@ const NAV = {
   employee: [
     ['', 'My day', 'home'],
     ['epics', 'My epics', 'epics'],
+    ['tasks', 'My tasks', 'check'],
     ['issues', 'My issues', 'alert'],
     ['requests', 'Weekend work', 'calendar'],
   ],
