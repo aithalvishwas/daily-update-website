@@ -472,7 +472,7 @@ function Footer() {
         <p>Daily work updates, epic health and AI summaries for teams.</p>
         <nav aria-label="Footer">
           <a href="#/login">Sign in</a>
-          <a href="#/signup">Create account</a>
+          <a href="#/signup">Sign up your company</a>
         </nav>
         <small>© {new Date().getFullYear()} WorkPulseLens</small>
       </div>

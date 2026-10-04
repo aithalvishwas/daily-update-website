@@ -66,4 +66,16 @@ final class Requests {
     record MySettings(String office) {}
 
     record Login(String email, String password) {}
+
+    record CompanySignup(
+            @NotBlank(message = "Company name is required (max 100 characters)")
+            @Size(max = 100, message = "Company name is required (max 100 characters)") String companyName,
+            @NotBlank(message = "Pick a workspace address") String slug,
+            @NotBlank(message = "Your name is required (max 100 characters)")
+            @Size(max = 100, message = "Your name is required (max 100 characters)") String name,
+            @NotBlank(message = "A valid email is required")
+            @Email(message = "A valid email is required")
+            @Size(max = 255, message = "A valid email is required") String email,
+            @NotBlank(message = "Password must be 8 to 128 characters")
+            @Size(min = 8, max = 128, message = "Password must be 8 to 128 characters") String password) {}
 }

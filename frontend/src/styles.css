@@ -225,6 +225,8 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
   z-index: 30;
 }
 .sidebar-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 1.05rem; padding: 4px 8px 20px; text-decoration: none !important; }
+.sidebar-brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.sidebar-brand-text small { color: #9fb3c8; font-size: 0.78rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
 .nav-item {
   position: relative;
@@ -720,6 +722,16 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
 .auth-panel { display: flex; align-items: center; justify-content: center; padding: 32px 16px; background: var(--bg); }
 .auth-card { width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow-lg); }
 .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
+.auth-stack { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
+.auth-find { padding: 22px 32px; gap: 10px; box-shadow: var(--shadow-sm); }
+.auth-find h3 { font-size: 1rem; }
+.auth-workspace { display: inline-flex; align-self: flex-start; padding: 3px 10px; border-radius: 999px; background: var(--gray-soft); color: var(--muted); font-size: 0.82rem; }
+.address-field { display: flex; align-items: stretch; min-width: 0; }
+.address-field input { flex: 1; min-width: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.address-field span { display: flex; align-items: center; padding: 0 10px; border: 1px solid var(--border-strong); border-left: 0; border-radius: 0 8px 8px 0; background: var(--gray-soft); color: var(--muted); font-size: 0.88rem; white-space: nowrap; }
+.field-help { color: var(--muted); font-size: 0.78rem; font-weight: 400; }
+.field-error { color: var(--red); }
+.boot-message { min-height: 100vh; display: grid; place-content: center; gap: 12px; padding: 16px; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -1,6 +1,6 @@
 # Put WorkPulseLens live on workpulselens.com
 
-WorkPulseLens runs on one small Linux server with Docker. Caddy sits in front of the app and gets a free HTTPS certificate for `workpulselens.com` and `www.workpulselens.com` automatically, and renews it on its own.
+WorkPulseLens runs on one small Linux server with Docker. Caddy sits in front of the app and gets free HTTPS certificates automatically, and renews them on its own: for `workpulselens.com`, `www.workpulselens.com`, and each company workspace such as `google.workpulselens.com` the first time someone opens it.
 
 You do three things: create a server, point the domain at it, and run one command on it. Everything below works from the Mac Terminal app.
 
@@ -32,15 +32,17 @@ Don't use GoDaddy's website builder: WorkPulseLens is its own website, so only t
    - If it's a **CNAME** pointing to `@` or `workpulselens.com`, leave it.
    - Otherwise delete it and add **Type A, Name www, Value** your server's IP.
 4. Delete any other **A** or **AAAA** records for `@` or `www` that point somewhere else (for example to GoDaddy's "Parked" page).
+5. For company workspaces, click **Add New Record** and add **Type A, Name `*`** (just an asterisk), **Value** your server's IP, TTL 1/2 hour, and save. This sends every `<company>.workpulselens.com` to the server.
 
 DNS changes usually show up within minutes, sometimes up to an hour. Check from your Mac:
 
 ```sh
 dig +short workpulselens.com
 dig +short www.workpulselens.com
+dig +short anything.workpulselens.com
 ```
 
-Both should print your server's IP.
+All three should print your server's IP.
 
 ## 3. Deploy
 
@@ -62,9 +64,9 @@ The second part is the email you'll sign in with as the admin. If you leave it o
 
 The script installs Docker, opens only SSH, HTTP and HTTPS in the firewall, creates `config/.env` with strong random passwords, builds the app and starts it. The first build takes several minutes. At the end it prints the admin and manager logins: save them somewhere safe.
 
-Open <https://workpulselens.com>. Sign in as the admin. On the **Accounts** page you can add people and give each one a role (employee, manager or admin), change anyone's role later with **Edit**, and change the manager login's email to a real one.
+Open <https://workpulselens.com>: that's the public site, where companies sign up and get their own workspace. Your existing data and the admin and manager accounts are in the default workspace at <https://app.workpulselens.com>; sign in there as the admin. On the **Accounts** page you can add people and give each one a role (employee, manager or admin), change anyone's role later with **Edit**, and change the manager login's email to a real one.
 
-To add Ram as an employee: on **Accounts**, choose **Add account**, enter name *Ram* and email `ram@workpulselens.com`, leave access on **Employee**, and save. Give Ram the temporary password it shows; Ram signs in at <https://workpulselens.com>.
+To add Ram as an employee: on **Accounts**, choose **Add account**, enter name *Ram* and email `ram@workpulselens.com`, leave access on **Employee**, and save. Give Ram the temporary password it shows; Ram signs in at <https://app.workpulselens.com>.
 
 For AI summaries, add your key on the server (never paste it in chat or commit it), then run the deploy again:
 
@@ -93,6 +95,7 @@ docker compose -f config/docker-compose.yml -f config/docker-compose.prod.yml lo
 ```
 
 - **The browser shows a certificate warning or can't connect**: DNS doesn't point to the server yet. Check `dig +short workpulselens.com`; Caddy retries on its own once it does.
+- **A company workspace can't connect, but workpulselens.com works**: the `*` record from step 2 is missing (check `dig +short google.workpulselens.com`), or no company has signed up with that address. Caddy only gets certificates for workspaces that exist.
 - **You still see the GoDaddy page**: an old A record or the website builder is still active, see step 2.
 
 ## Backups

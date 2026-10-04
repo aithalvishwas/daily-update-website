@@ -34,12 +34,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         : List.of(new SimpleGrantedAuthority("ROLE_" + user.role().toUpperCase()));
                 var auth = new UsernamePasswordAuthenticationToken(user, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                TenantContext.set(user.companyId());
             } catch (JwtException | IllegalArgumentException e) {
                 // Invalid token: stay anonymous; protected endpoints answer 401.
                 SecurityContextHolder.clearContext();
                 request.setAttribute("auth.error", "Invalid or expired token");
             }
         }
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            TenantContext.set(null);
+        }
     }
 }

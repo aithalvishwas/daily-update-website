@@ -43,6 +43,10 @@ services:
     environment:
       <<: *service-env
       PORT: 4001
+      # Workspaces are served at <company>.<ROOT_DOMAIN>: google.localhost:8080 on your computer.
+      # docker-compose.prod.yml sets it to your DOMAIN.
+      ROOT_DOMAIN: localhost
+      DEFAULT_WORKSPACE: ${DEFAULT_WORKSPACE:-app}
       ADMIN_NAME: ${ADMIN_NAME:-Admin}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}

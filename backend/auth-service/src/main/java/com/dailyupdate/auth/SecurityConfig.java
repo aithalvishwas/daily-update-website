@@ -17,7 +17,10 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
         return SecuritySupport.apply(http, jwtService)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/companies")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/companies/current", "/api/companies/check",
+                                "/api/companies/tls-check").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/managers", "/api/teams").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

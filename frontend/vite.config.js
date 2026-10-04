@@ -7,12 +7,15 @@ const service = (port) => ({ target: `http://localhost:${port}`, changeOrigin: f
 export default defineConfig({
   plugins: [react()],
   server: {
+    // Workspaces are tried locally at <company>.localhost:5173.
+    allowedHosts: ['.localhost'],
     proxy: {
       '/api/auth': service(4001),
       '/api/users': service(4001),
       '/api/teams': service(4001),
       '/api/admin': service(4001),
       '/api/workplace': service(4001),
+      '/api/companies': service(4001),
       '/api/logs': service(4002),
       '/api/summaries': service(4003),
       '/api/epics': service(4004),

@@ -1,8 +1,9 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useToast } from './Toast.jsx';
 import Logo from './Logo.jsx';
 import { OFFICES } from '../workplace.js';
+import { hashParam } from '../workspace.js';
 
 // three.js is large, so the 3D scene loads in its own chunk after the form is usable.
 const Scene3D = lazy(() => import('./Scene3D.jsx'));
@@ -13,10 +14,17 @@ const FEATURES = [
   ['AI writes the summary', 'Managers get a clear digest of each person’s week.'],
 ];
 
-export default function AuthPage({ initialTab = 'login', onSignedIn }) {
+// Log in or join on a company's own address (google.workpulselens.com).
+export default function AuthPage({ initialTab = 'login', workspace, rootDomain, onSignedIn }) {
   const [tab, setTab] = useState(initialTab);
   const [busy, setBusy] = useState(false);
+  const [email] = useState(() => hashParam('email'));
   const toast = useToast();
+
+  // Just signed the company up on the public site.
+  useEffect(() => {
+    if (hashParam('welcome')) toast(`Your ${workspace.name} workspace is ready. Log in to get started.`, 'success');
+  }, [toast, workspace.name]);
 
   async function submit(e) {
     e.preventDefault();
@@ -64,9 +72,12 @@ export default function AuthPage({ initialTab = 'login', onSignedIn }) {
 
       <section className="auth-panel">
         <div className="card auth-card">
-          <h2>{tab === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+          <span className="auth-workspace">
+            {workspace.slug}.{rootDomain}
+          </span>
+          <h2>{tab === 'login' ? `Log in to ${workspace.name}` : `Join ${workspace.name}`}</h2>
           <p className="muted">
-            {tab === 'login' ? 'Log in to post your update or review your team.' : 'Sign up as an employee to start logging.'}
+            {tab === 'login' ? 'Post your update or review your team.' : `Sign up as an employee of ${workspace.name}.`}
           </p>
 
           <div className="tabs tabs-full" role="tablist">
@@ -93,7 +104,7 @@ export default function AuthPage({ initialTab = 'login', onSignedIn }) {
             )}
             <label>
               Email
-              <input name="email" type="email" autoComplete="email" required />
+              <input name="email" type="email" autoComplete="email" defaultValue={email} required />
             </label>
             {tab === 'register' && (
               <div className="form-grid">
@@ -132,7 +143,7 @@ export default function AuthPage({ initialTab = 'login', onSignedIn }) {
             <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
               {busy ? 'Please wait…' : tab === 'login' ? 'Log in' : 'Create employee account'}
             </button>
-            {tab === 'register' && <p className="hint">Manager accounts are created by an existing manager.</p>}
+            {tab === 'register' && <p className="hint">Your admin gives manager access from the Accounts page.</p>}
           </form>
         </div>
       </section>

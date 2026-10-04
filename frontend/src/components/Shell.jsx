@@ -25,7 +25,7 @@ const NAV = {
 };
 
 /** Work-app layout: navy sidebar on the left, header with alerts on top. */
-export default function Shell({ user, token, section, counts = {}, onSignOut, children }) {
+export default function Shell({ user, token, workspace, section, counts = {}, onSignOut, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { weekendRequests } = useWorkplace();
   const nav = (
@@ -39,7 +39,10 @@ export default function Shell({ user, token, section, counts = {}, onSignOut, ch
       <aside className="sidebar">
         <a className="sidebar-brand" href="#/">
           <img src="/favicon.svg" alt="" width="30" height="30" />
-          <span>WorkPulseLens</span>
+          <span className="sidebar-brand-text">
+            <span>WorkPulseLens</span>
+            <small>{workspace.name}</small>
+          </span>
         </a>
         <nav className="sidebar-nav" aria-label="Main">
           {nav.map(([path, label, icon]) => (

@@ -26,7 +26,11 @@ services:
 
   # Keep the database and services from filling the disk with logs.
   db: { logging: *logs }
-  auth-service: { logging: *logs }
+  auth-service:
+    logging: *logs
+    # Company workspaces live at <company>.<DOMAIN>, e.g. google.workpulselens.com.
+    environment:
+      ROOT_DOMAIN: ${DOMAIN}
   worklog-service: { logging: *logs }
   summary-service: { logging: *logs }
   project-service: { logging: *logs }

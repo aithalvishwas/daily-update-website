@@ -60,8 +60,10 @@ docker compose --env-file "$ENV_FILE" \
   -f "$DIR/docker-compose.yml" -f "$DIR/docker-compose.prod.yml" up -d --build --remove-orphans
 
 echo
-echo "WorkPulseLens is starting at https://$DOMAIN (and https://www.$DOMAIN)"
-echo "HTTPS is set up automatically once your domain's DNS points to this server."
+DEFAULT_WORKSPACE=$(grep '^DEFAULT_WORKSPACE=' "$ENV_FILE" | cut -d= -f2-)
+echo "WorkPulseLens is starting at https://$DOMAIN (and https://www.$DOMAIN), where companies sign up."
+echo "Each company gets https://<company>.$DOMAIN. Your own accounts are at https://${DEFAULT_WORKSPACE:-app}.$DOMAIN"
+echo "HTTPS is set up automatically once DNS points to this server: records @, www and * (wildcard)."
 echo "Admin login:   $(grep '^ADMIN_EMAIL=' "$ENV_FILE" | cut -d= -f2-) / $(grep '^ADMIN_PASSWORD=' "$ENV_FILE" | cut -d= -f2-)"
 echo "Manager login: $(grep '^MANAGER_EMAIL=' "$ENV_FILE" | cut -d= -f2-) / $(grep '^MANAGER_PASSWORD=' "$ENV_FILE" | cut -d= -f2-)"
-echo "Sign in as the admin and use the Accounts page to add people and give them a role (employee, manager or admin)."
+echo "Sign in as the admin at https://${DEFAULT_WORKSPACE:-app}.$DOMAIN and use the Accounts page to add people and give them a role (employee, manager or admin)."
