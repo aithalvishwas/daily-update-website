@@ -14,6 +14,7 @@ import Requests from './pages/Requests.jsx';
 import Admin from './pages/Admin.jsx';
 import WorkplaceSettings from './pages/WorkplaceSettings.jsx';
 import MySettings from './pages/MySettings.jsx';
+import Landing from './pages/Landing.jsx';
 import { OFFICES, WorkplaceContext } from './workplace.js';
 
 // Sidebar badges: what is waiting for this person.
@@ -109,6 +110,7 @@ export default function App() {
   const signOut = useCallback(() => {
     saveSession(null);
     setSession(null);
+    window.location.hash = '/login';
   }, []);
 
   useEffect(() => setUnauthorizedHandler(signOut), [signOut]);
@@ -151,7 +153,11 @@ export default function App() {
   return (
     <ToastProvider>
       {!session ? (
-        <AuthPage onSignedIn={signIn} />
+        path[0] === 'login' || path[0] === 'signup' ? (
+          <AuthPage key={path[0]} initialTab={path[0] === 'signup' ? 'register' : 'login'} onSignedIn={signIn} />
+        ) : (
+          <Landing />
+        )
       ) : !workplace ? (
         <div className="boot" aria-busy="true" />
       ) : (

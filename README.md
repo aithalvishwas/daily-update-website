@@ -14,6 +14,10 @@ WorkPulseLens is a work app for teams: employees log what they did each day agai
 
 ![Admin accounts page](docs/admin.png)
 
+The public landing page at workpulselens.com (signed-out visitors land here; *Sign in* and *Get started* open the login and sign-up forms):
+
+![WorkPulseLens landing page](docs/landing.png)
+
 The login page keeps the three.js 3D scene:
 
 ![Login page with the 3D scene](docs/login.png)

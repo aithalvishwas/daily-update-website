@@ -13,8 +13,8 @@ const FEATURES = [
   ['AI writes the summary', 'Managers get a clear digest of each person’s week.'],
 ];
 
-export default function AuthPage({ onSignedIn }) {
-  const [tab, setTab] = useState('login');
+export default function AuthPage({ initialTab = 'login', onSignedIn }) {
+  const [tab, setTab] = useState(initialTab);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
 
@@ -43,7 +43,9 @@ export default function AuthPage({ onSignedIn }) {
           </Suspense>
         </div>
         <div className="auth-copy">
-          <Logo />
+          <a href="#/" className="auth-home" aria-label="WorkPulseLens home">
+            <Logo />
+          </a>
           <h1>
             Your team's day,
             <br />
