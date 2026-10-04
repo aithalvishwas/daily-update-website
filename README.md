@@ -131,7 +131,7 @@ cd daily-update-website
 
 Optionally, edit `config/.env`:
 
-- `ADMIN_EMAIL` / `ADMIN_PASSWORD`: the first admin account, created on first start if there is no admin yet
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD`: the first admin account (default `admin@workpulselens.com`), created on first start if there is no admin yet. Set the email when creating the file with `ADMIN_EMAIL=you@workpulselens.com ./config/setup.sh`. That admin gives everyone else their role on the **Accounts** page.
 - `MANAGER_EMAIL` / `MANAGER_PASSWORD`: the first manager account, created on first start
 - `ANTHROPIC_API_KEY`: your Anthropic API key for AI summaries (get one at [console.anthropic.com](https://console.anthropic.com)). Without it the app still works and shows a basic, non-AI summary.
 
