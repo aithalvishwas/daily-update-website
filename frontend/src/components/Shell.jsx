@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ROLE_LABEL } from '../format.js';
 import Avatar from './Avatar.jsx';
 import Icon from './Icon.jsx';
+import { LogoMark } from './Logo.jsx';
 import NotificationBell from './NotificationBell.jsx';
 import { useWorkplace } from '../workplace.js';
 
@@ -38,9 +39,11 @@ export default function Shell({ user, token, workspace, section, counts = {}, on
     <div className={`shell ${menuOpen ? 'menu-open' : ''}`}>
       <aside className="sidebar">
         <a className="sidebar-brand" href="#/">
-          <img src="/favicon.svg" alt="" width="30" height="30" />
+          <LogoMark size={30} />
           <span className="sidebar-brand-text">
-            <span>WorkPulseLens</span>
+            <span className="logo-word">
+              WorkPulse<b>Lens</b>
+            </span>
             <small>{workspace.name}</small>
           </span>
         </a>

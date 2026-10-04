@@ -1,11 +1,8 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import Logo from '../components/Logo.jsx';
 import { OFFICES } from '../workplace.js';
 import '../landing.css';
-
-// three.js is large, so the 3D scene loads in its own chunk after the page is readable.
-const Scene3D = lazy(() => import('../components/Scene3D.jsx'));
 
 const TOUR = [
   {
@@ -89,7 +86,7 @@ const SECURITY = [
   ['shield', 'HTTPS everywhere', 'Certificates are issued and renewed automatically.'],
   ['settings', 'Roles that mean something', 'Employees, managers and admins each see only what they should.'],
   ['clock', 'Rate-limited sign-in', 'Repeated wrong passwords are slowed down per visitor.'],
-  ['file', 'Your own database', 'Runs on your server with PostgreSQL. Your data stays yours.'],
+  ['file', 'Your company, kept apart', 'Each company gets its own workspace. No one else can see your data.'],
 ];
 
 function usePrefersReducedMotion() {
@@ -129,7 +126,7 @@ function useTilt(ref, reduced) {
     const update = () => {
       frame = 0;
       const progress = Math.min(1, Math.max(0, window.scrollY / 420));
-      el.style.transform = `perspective(1600px) rotateX(${(1 - progress) * 14}deg) scale(${0.94 + progress * 0.06})`;
+      el.style.transform = `perspective(1600px) rotateX(${(1 - progress) * 8}deg) scale(${0.97 + progress * 0.03})`;
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
@@ -170,7 +167,7 @@ function Nav() {
           <a href="#security" onClick={jump('security')}>Security</a>
         </nav>
         <div className="lp-nav-cta">
-          <a href="#/signup" className="lp-btn lp-btn-primary">Get started</a>
+          <a href="#/signup" className="lp-btn lp-btn-primary">Try it free</a>
         </div>
         <button type="button" className="lp-menu" aria-label="Menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           <Icon name="menu" size={22} />
@@ -185,21 +182,12 @@ function Hero({ reduced }) {
   useTilt(shot, reduced);
   return (
     <section className="lp-hero">
-      <div className="lp-hero-glow" aria-hidden="true" />
-      <div className="lp-grid-lines" aria-hidden="true" />
-      {!reduced && (
-        <div className="lp-hero-scene" aria-hidden="true">
-          <Suspense fallback={null}>
-            <Scene3D />
-          </Suspense>
-        </div>
-      )}
       <div className="lp-container lp-hero-copy">
         <span className="lp-pill">
           <Icon name="spark" size={14} /> AI summaries for every team
         </span>
         <h1>
-          See how your team’s work is <span className="lp-gradient">really going.</span>
+          See how your team’s work is <em>really</em> going.
         </h1>
         <p className="lp-lead">
           WorkPulseLens turns two-minute daily updates into live epic health, blocker alerts and an AI-written summary
@@ -207,31 +195,33 @@ function Hero({ reduced }) {
         </p>
         <div className="lp-hero-cta">
           <a href="#/signup" className="lp-btn lp-btn-primary lp-btn-lg">
-            Get started free <Icon name="chevronRight" size={16} />
+            Try it free
           </a>
         </div>
         <ul className="lp-hero-ticks">
-          <li><Icon name="check" size={16} /> Works for interns to admins</li>
-          <li><Icon name="check" size={16} /> India office holidays built in</li>
-          <li><Icon name="check" size={16} /> Runs on your own server</li>
+          <li><Icon name="check" size={14} /> Free to start</li>
+          <li><Icon name="check" size={14} /> Your own company workspace</li>
+          <li><Icon name="check" size={14} /> India office holidays built in</li>
         </ul>
       </div>
       <div className="lp-container lp-hero-shot-wrap">
-        <div className="lp-browser" ref={shot}>
-          <div className="lp-browser-bar" aria-hidden="true">
-            <span /><span /><span />
-            <div className="lp-browser-url">workpulselens.com</div>
+        <div className="lp-stage">
+          <div className="lp-browser" ref={shot}>
+            <div className="lp-browser-bar" aria-hidden="true">
+              <span /><span /><span />
+              <div className="lp-browser-url">yourcompany.workpulselens.com</div>
+            </div>
+            <img src="/landing/manager-dashboard.png" alt="Manager dashboard with epic health, deadlines and alerts" width="1440" height="960" />
           </div>
-          <img src="/landing/manager-dashboard.png" alt="Manager dashboard with epic health, deadlines and alerts" width="1440" height="960" />
-        </div>
-        <div className="lp-float lp-float-a" aria-hidden="true">
-          <span className="lp-dot lp-dot-green" /> Checkout v2 <b>On track</b>
-        </div>
-        <div className="lp-float lp-float-b" aria-hidden="true">
-          <Icon name="alert" size={16} /> New blocker from Arjun
-        </div>
-        <div className="lp-float lp-float-c" aria-hidden="true">
-          <Icon name="spark" size={16} /> Weekly summary ready
+          <div className="lp-float lp-float-a" aria-hidden="true">
+            <span className="lp-dot lp-dot-green" /> Checkout v2 <b>On track</b>
+          </div>
+          <div className="lp-float lp-float-b" aria-hidden="true">
+            <Icon name="alert" size={16} /> New blocker from Arjun
+          </div>
+          <div className="lp-float lp-float-c" aria-hidden="true">
+            <Icon name="spark" size={16} /> Weekly summary ready
+          </div>
         </div>
       </div>
     </section>
@@ -400,7 +390,7 @@ function Ai({ reduced }) {
     <section className="lp-section lp-ai" id="ai">
       <div className="lp-container lp-ai-inner">
         <div className="lp-ai-copy" data-reveal>
-          <span className="lp-eyebrow lp-eyebrow-light">AI summaries</span>
+          <span className="lp-eyebrow">AI summaries</span>
           <h2>Read a week of work in thirty seconds</h2>
           <p>
             Managers open anyone on the team and get a plain-language digest of the last 7, 14 or 30 days: what shipped,
@@ -447,14 +437,15 @@ function Cta() {
     <section className="lp-cta-wrap">
       <div className="lp-container">
         <div className="lp-cta" data-reveal>
-          <div className="lp-cta-glow" aria-hidden="true" />
-          <h2>Give your team its pulse back.</h2>
-          <p>Start with your own daily update today. Your manager sees the picture tomorrow.</p>
+          <h2>
+            Give your team its <em>pulse</em> back.
+          </h2>
+          <p>Sign your company up in a minute. Your team posts its first update today.</p>
           <div className="lp-hero-cta">
             <a href="#/signup" className="lp-btn lp-btn-white lp-btn-lg">
-              Get started free <Icon name="chevronRight" size={16} />
+              Try it free
             </a>
-            </div>
+          </div>
         </div>
       </div>
     </section>
