@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS teams (
     name       VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS org_size VARCHAR(20);
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS phone VARCHAR(30);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('employee', 'manager', 'admin'));
@@ -36,6 +38,8 @@ CREATE TABLE IF NOT EXISTS companies (
     name       VARCHAR(100) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS org_size VARCHAR(20);
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS phone VARCHAR(30);
 
 -- Workspaces: every company's data is kept apart. Rows from before workspaces existed belong to
 -- company 1. company_id is filled in automatically from the signed-in user's workspace, and the

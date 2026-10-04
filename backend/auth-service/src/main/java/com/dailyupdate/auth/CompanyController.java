@@ -94,7 +94,8 @@ public class CompanyController {
         long id = companies.nextId();
         try {
             Company company = TenantContext.call(id, () -> tx.execute(status -> {
-                Company created = companies.insert(id, slug, body.companyName().trim());
+                Company created = companies.insert(id, slug, body.companyName().trim(),
+                        UserService.blankToNull(body.orgSize()), UserService.blankToNull(body.phone()));
                 userService.create(body.name(), body.email(), body.password(), null, "Admin", AuthUser.ADMIN);
                 holidays.seed();
                 return created;

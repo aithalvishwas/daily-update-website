@@ -1,5 +1,6 @@
 package com.dailyupdate.auth;
 
+import java.sql.Types;
 import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -28,11 +29,15 @@ public class CompanyRepository {
         return jdbc.sql("SELECT nextval(pg_get_serial_sequence('companies', 'id'))").query(Long.class).single();
     }
 
-    public Company insert(long id, String slug, String name) {
-        return jdbc.sql("INSERT INTO companies (id, slug, name) VALUES (:id, :slug, :name) RETURNING id, slug, name")
+    public Company insert(long id, String slug, String name, String orgSize, String phone) {
+        return jdbc.sql("""
+                        INSERT INTO companies (id, slug, name, org_size, phone) VALUES (:id, :slug, :name, :orgSize, :phone)
+                        RETURNING id, slug, name""")
                 .param("id", id)
                 .param("slug", slug)
                 .param("name", name)
+                .param("orgSize", orgSize, Types.VARCHAR)
+                .param("phone", phone, Types.VARCHAR)
                 .query(Company.class)
                 .single();
     }

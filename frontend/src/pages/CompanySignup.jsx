@@ -1,16 +1,18 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import { useToast } from '../components/Toast.jsx';
 import Logo from '../components/Logo.jsx';
+import Icon from '../components/Icon.jsx';
 import { slugify, workspaceUrl } from '../workspace.js';
 
-const Scene3D = lazy(() => import('../components/Scene3D.jsx'));
-
-const FEATURES = [
-  ['Your own workspace', 'Your company gets its own address, like google.workpulselens.com.'],
-  ['Your data stays yours', 'Each company’s people, updates and summaries are kept fully separate.'],
-  ['Invite your team', 'Add managers and employees from the Accounts page, or let them join.'],
+const POINTS = [
+  'Your company gets its own workspace, like google.workpulselens.com.',
+  'Daily updates turn into live epic health and AI-written summaries.',
+  'Each company’s people, updates and summaries are kept fully separate.',
+  'Add managers and employees from the Accounts page whenever you’re ready.',
 ];
+
+const ORG_SIZES = ['1-10', '11-50', '51-200', '201-1000', '1000+'];
 
 // The public site only signs companies up. People log in on their company's own address,
 // so "Sign in" here just takes them there.
@@ -48,12 +50,23 @@ export default function CompanySignup({ rootDomain, mode = 'signup' }) {
 
   async function submit(e) {
     e.preventDefault();
-    const form = Object.fromEntries(new FormData(e.currentTarget));
+    const f = Object.fromEntries(new FormData(e.currentTarget));
     setBusy(true);
     try {
-      const { workspace } = await api('/api/companies', { method: 'POST', body: { ...form, companyName: company, slug } });
+      const { workspace } = await api('/api/companies', {
+        method: 'POST',
+        body: {
+          companyName: company,
+          slug,
+          name: `${f.firstName.trim()} ${f.lastName.trim()}`.trim(),
+          email: f.email,
+          password: f.password,
+          orgSize: f.orgSize,
+          phone: f.phone,
+        },
+      });
       toast(`${workspace.name} is ready. Taking you to your workspace…`, 'success');
-      const email = encodeURIComponent(form.email);
+      const email = encodeURIComponent(f.email);
       setTimeout(() => {
         window.location.href = workspaceUrl(workspace.slug, rootDomain, `/#/login?welcome=1&email=${email}`);
       }, 900);
@@ -72,92 +85,133 @@ export default function CompanySignup({ rootDomain, mode = 'signup' }) {
   const taken = check && check.slug === slug && !check.available;
 
   return (
-    <div className="auth-layout">
-      <section className="auth-hero">
-        <div className="auth-scene">
-          <Suspense fallback={<div className="scene-fallback" />}>
-            <Scene3D />
-          </Suspense>
-        </div>
-        <div className="auth-copy">
-          <a href="#/" className="auth-home" aria-label="WorkPulseLens home">
-            <Logo />
-          </a>
-          <h1>
-            Set up your
-            <br />
-            <span className="gradient-text">company workspace.</span>
-          </h1>
-          <ul className="feature-list">
-            {FEATURES.map(([title, text]) => (
-              <li key={title}>
-                <strong>{title}</strong>
-                <span>{text}</span>
+    <div className="cs">
+      <header className="cs-header">
+        <a href="#/" className="cs-brand" aria-label="WorkPulseLens home">
+          <Logo />
+        </a>
+      </header>
+
+      <main className="cs-main">
+        <section className="cs-intro">
+          <h1>Sign up your company. It’s free to start.</h1>
+          <ul className="cs-points">
+            {POINTS.map((p) => (
+              <li key={p}>
+                <span className="cs-tick" aria-hidden="true">
+                  <Icon name="check" size={12} />
+                </span>
+                {p}
               </li>
             ))}
           </ul>
-        </div>
-      </section>
 
-      <section className="auth-panel">
-        <div className="auth-stack">
-          <div className="card auth-card">
-            <h2>Sign up your company</h2>
-            <p className="muted">You’ll be the admin of your company’s workspace.</p>
-            <form className="form" onSubmit={submit}>
-              <label>
-                Company name
-                <input name="companyName" value={company} onChange={onCompany} maxLength={100} autoComplete="organization" required />
-              </label>
-              <label>
-                Workspace address
-                <div className="address-field">
-                  <input
-                    name="slug"
-                    value={slug}
-                    onChange={(e) => {
-                      setSlugEdited(true);
-                      setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40));
-                    }}
-                    aria-describedby="slug-help"
-                    aria-invalid={taken || undefined}
-                    required
-                  />
-                  <span>.{rootDomain}</span>
-                </div>
-                <span id="slug-help" className={`field-help ${taken ? 'field-error' : ''}`}>
-                  {taken ? check.reason || 'That address is taken' : check?.available ? 'Available' : 'Letters, numbers and dashes'}
-                </span>
-              </label>
-              <label>
-                Your full name
-                <input name="name" maxLength={100} autoComplete="name" required />
-              </label>
-              <label>
-                Work email
-                <input name="email" type="email" autoComplete="email" required />
-              </label>
-              <label>
-                Password
-                <input name="password" type="password" minLength={8} maxLength={128} autoComplete="new-password" required />
-              </label>
-              <button className="btn btn-primary btn-block" type="submit" disabled={busy || taken}>
-                {busy ? 'Creating your workspace…' : 'Create workspace'}
-              </button>
-            </form>
-          </div>
-
-          <form className="card auth-card auth-find" onSubmit={go}>
-            <h3>Already have a workspace?</h3>
-            <p className="muted small">Log in on your company’s own address.</p>
-            <div className="address-field">
-              <input ref={findRef} name="workspace" placeholder="yourcompany" aria-label="Your workspace address" required />
-              <span>.{rootDomain}</span>
+          <form className="cs-find" onSubmit={go}>
+            <h2>Already have a workspace?</h2>
+            <p>Log in on your company’s own address.</p>
+            <div className="cs-find-row">
+              <div className="address-field">
+                <input ref={findRef} name="workspace" placeholder="yourcompany" aria-label="Your workspace address" required />
+                <span>.{rootDomain}</span>
+              </div>
+              <button className="cs-btn cs-btn-outline" type="submit">Go</button>
             </div>
-            <button className="btn btn-block" type="submit">Go to my workspace</button>
           </form>
-        </div>
-      </section>
+        </section>
+
+        <section className="cs-card">
+          <h2 className="cs-title">
+            <em>Try</em> <strong>WorkPulseLens</strong>
+          </h2>
+          <p className="cs-sub">No credit card required. You’ll be your workspace’s admin.</p>
+
+          <form className="cs-form" onSubmit={submit}>
+            <label>
+              <span><b>*</b>First name</span>
+              <input name="firstName" placeholder="Enter your first name" maxLength={50} autoComplete="given-name" required />
+            </label>
+            <label>
+              <span><b>*</b>Last name</span>
+              <input name="lastName" placeholder="Enter your last name" maxLength={49} autoComplete="family-name" required />
+            </label>
+            <label>
+              <span><b>*</b>Work email</span>
+              <input name="email" type="email" placeholder="you@company.com" autoComplete="email" required />
+            </label>
+            <label>
+              <span><b>*</b>Company name</span>
+              <input
+                name="companyName"
+                value={company}
+                onChange={onCompany}
+                placeholder="Enter your company"
+                maxLength={100}
+                autoComplete="organization"
+                required
+              />
+            </label>
+            <label className="cs-span">
+              <span><b>*</b>Workspace address</span>
+              <div className="address-field">
+                <input
+                  name="slug"
+                  value={slug}
+                  placeholder="yourcompany"
+                  onChange={(e) => {
+                    setSlugEdited(true);
+                    setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40));
+                  }}
+                  aria-describedby="slug-help"
+                  aria-invalid={taken || undefined}
+                  required
+                />
+                <span>.{rootDomain}</span>
+              </div>
+              <small id="slug-help" className={`field-help ${taken ? 'field-error' : check?.available ? 'field-ok' : ''}`}>
+                {taken
+                  ? check.reason || 'That address is taken'
+                  : check?.available
+                    ? `${slug}.${rootDomain} is available`
+                    : 'Your team logs in here. Letters, numbers and dashes.'}
+              </small>
+            </label>
+            <label>
+              <span><b>*</b>Organization size</span>
+              <select name="orgSize" defaultValue="" required>
+                <option value="" disabled>
+                  Please select
+                </option>
+                {ORG_SIZES.map((s) => (
+                  <option key={s} value={s}>
+                    {s} employees
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Phone</span>
+              <input name="phone" type="tel" placeholder="Enter your phone number" maxLength={20} autoComplete="tel" />
+            </label>
+            <label className="cs-span">
+              <span><b>*</b>Password</span>
+              <input
+                name="password"
+                type="password"
+                placeholder="At least 8 characters"
+                minLength={8}
+                maxLength={128}
+                autoComplete="new-password"
+                required
+              />
+            </label>
+            <div className="cs-span cs-actions">
+              <button className="cs-btn" type="submit" disabled={busy || taken}>
+                {busy ? 'Creating your workspace…' : 'Try it free'}
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
     </div>
   );
 }
