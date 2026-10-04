@@ -143,6 +143,10 @@ Open http://localhost:8080. Log in as the admin or manager from `config/.env`, o
 
 Stop with `docker compose -f config/docker-compose.yml down` (add `-v` to also delete the database).
 
+## Put it live on your domain
+
+To run WorkPulseLens on `workpulselens.com` with HTTPS, follow [docs/DEPLOY.md](docs/DEPLOY.md): create a small Ubuntu server, point the domain's DNS at it, and run `sudo ./config/deploy.sh workpulselens.com` there.
+
 ## Develop without Docker
 
 Requirements: Java 21, Maven 3.9, Node 22, and a PostgreSQL database.
