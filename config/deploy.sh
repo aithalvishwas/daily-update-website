@@ -58,6 +58,10 @@ fi
 echo "Building and starting WorkPulseLens (the first build takes several minutes)..."
 docker compose --env-file "$ENV_FILE" \
   -f "$DIR/docker-compose.yml" -f "$DIR/docker-compose.prod.yml" up -d --build --remove-orphans
+# Docker doesn't restart Caddy when only the Caddyfile changed (and keeps the old copy of the file
+# mounted), so recreate it to pick up new settings. Takes a few seconds.
+docker compose --env-file "$ENV_FILE" \
+  -f "$DIR/docker-compose.yml" -f "$DIR/docker-compose.prod.yml" up -d --force-recreate --no-deps caddy
 
 echo
 DEFAULT_WORKSPACE=$(grep '^DEFAULT_WORKSPACE=' "$ENV_FILE" | cut -d= -f2-)

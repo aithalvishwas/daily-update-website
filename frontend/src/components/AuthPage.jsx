@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useToast } from './Toast.jsx';
 import Logo from './Logo.jsx';
-import { OFFICES } from '../workplace.js';
 import { hashParam } from '../workspace.js';
 
 // three.js is large, so the 3D scene loads in its own chunk after the form is usable.
@@ -14,9 +13,9 @@ const FEATURES = [
   ['AI writes the summary', 'Managers get a clear digest of each person’s week.'],
 ];
 
-// Log in or join on a company's own address (google.workpulselens.com).
-export default function AuthPage({ initialTab = 'login', workspace, rootDomain, onSignedIn }) {
-  const [tab, setTab] = useState(initialTab);
+// Log in on a company's own address (google.workpulselens.com). There is no sign-up here: the
+// company's admin adds people from the Accounts page.
+export default function AuthPage({ workspace, rootDomain, onSignedIn }) {
   const [busy, setBusy] = useState(false);
   const [email] = useState(() => hashParam('email'));
   const toast = useToast();
@@ -31,10 +30,8 @@ export default function AuthPage({ initialTab = 'login', workspace, rootDomain, 
     const form = Object.fromEntries(new FormData(e.currentTarget));
     setBusy(true);
     try {
-      const path = tab === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const data = await api(path, { method: 'POST', body: form });
+      const data = await api('/api/auth/login', { method: 'POST', body: form });
       onSignedIn({ token: data.token, user: data.user });
-      if (tab === 'register') toast('Welcome! Your account is ready.', 'success');
     } catch (err) {
       toast(err.message, 'error');
     } finally {
@@ -75,75 +72,22 @@ export default function AuthPage({ initialTab = 'login', workspace, rootDomain, 
           <span className="auth-workspace">
             {workspace.slug}.{rootDomain}
           </span>
-          <h2>{tab === 'login' ? `Log in to ${workspace.name}` : `Join ${workspace.name}`}</h2>
-          <p className="muted">
-            {tab === 'login' ? 'Post your update or review your team.' : `Sign up as an employee of ${workspace.name}.`}
-          </p>
+          <h2>Log in to {workspace.name}</h2>
+          <p className="muted">Post your update or review your team.</p>
 
-          <div className="tabs tabs-full" role="tablist">
-            {['login', 'register'].map((t) => (
-              <button
-                key={t}
-                type="button"
-                role="tab"
-                aria-selected={tab === t}
-                className={tab === t ? 'active' : ''}
-                onClick={() => setTab(t)}
-              >
-                {t === 'login' ? 'Log in' : 'Sign up'}
-              </button>
-            ))}
-          </div>
-
-          <form key={tab} className="form" onSubmit={submit}>
-            {tab === 'register' && (
-              <label>
-                Full name
-                <input name="name" maxLength={100} autoComplete="name" required />
-              </label>
-            )}
+          <form className="form" onSubmit={submit}>
             <label>
               Email
               <input name="email" type="email" autoComplete="email" defaultValue={email} required />
             </label>
-            {tab === 'register' && (
-              <div className="form-grid">
-                <label>
-                  <span>Team <span className="optional">optional</span></span>
-                  <input name="team" maxLength={100} />
-                </label>
-                <label>
-                  <span>Position <span className="optional">optional</span></span>
-                  <input name="position" maxLength={100} />
-                </label>
-              </div>
-            )}
-            {tab === 'register' && (
-              <label>
-                <span>Office <span className="optional">for your holiday calendar</span></span>
-                <select name="office" defaultValue="">
-                  <option value="">Choose later</option>
-                  {OFFICES.map((o) => (
-                    <option key={o}>{o}</option>
-                  ))}
-                </select>
-              </label>
-            )}
             <label>
               Password
-              <input
-                name="password"
-                type="password"
-                minLength={tab === 'register' ? 8 : undefined}
-                maxLength={128}
-                autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
-                required
-              />
+              <input name="password" type="password" maxLength={128} autoComplete="current-password" required />
             </label>
             <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-              {busy ? 'Please wait…' : tab === 'login' ? 'Log in' : 'Create employee account'}
+              {busy ? 'Please wait…' : 'Log in'}
             </button>
-            {tab === 'register' && <p className="hint">Your admin gives manager access from the Accounts page.</p>}
+            <p className="hint">New here? Ask your admin to add you from the Accounts page.</p>
           </form>
         </div>
       </section>

@@ -202,8 +202,6 @@ function WorkspaceApp({ workspace, missing, rootDomain }) {
         missing ? <NoWorkspace slug={missing} rootDomain={rootDomain} /> : <PublicSite path={path} rootDomain={rootDomain} />
       ) : !session ? (
         <AuthPage
-          key={path[0] === 'signup' ? 'signup' : 'login'}
-          initialTab={path[0] === 'signup' ? 'register' : 'login'}
           workspace={workspace}
           rootDomain={rootDomain}
           onSignedIn={signIn}
