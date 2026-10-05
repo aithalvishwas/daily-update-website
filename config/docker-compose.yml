@@ -55,7 +55,7 @@ services:
       MANAGER_EMAIL: ${MANAGER_EMAIL:-}
       MANAGER_PASSWORD: ${MANAGER_PASSWORD:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      MAIL_FROM: ${MAIL_FROM:-WorkPulseLens <noreply@workpulselens.com>}
+      MAIL_FROM: ${MAIL_FROM:-WorkPulseLens <support@workpulselens.com>}
 
   worklog-service:
     <<: *java-service

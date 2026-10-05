@@ -93,7 +93,7 @@ themselves. To turn email on:
    sudo ./config/deploy.sh workpulselens.com
    ```
 
-Emails come from `noreply@workpulselens.com`. Set `MAIL_FROM` in `config/.env` to change it.
+Emails come from `support@workpulselens.com`. Set `MAIL_FROM` in `config/.env` to change it.
 
 ## Updating
 
