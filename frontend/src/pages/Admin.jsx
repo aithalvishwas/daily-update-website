@@ -11,17 +11,10 @@ import { useWorkplace } from '../workplace.js';
 const POSITIONS = ['Intern', 'Junior Engineer', 'Engineer', 'Senior Engineer', 'Lead Engineer', 'Designer', 'QA Engineer', 'Product Manager', 'Manager', 'Director'];
 const ROLE_TONE = { admin: 'red', manager: 'purple', employee: 'gray' };
 
-function randomPassword() {
-  const bytes = new Uint8Array(9);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b % 55]).join('');
-}
-
-function AccountForm({ token, account, teams, onClose, onSaved }) {
+function AccountForm({ token, account, teams, onClose, onSaved, onInvited }) {
   const toast = useToast();
   const { offices } = useWorkplace();
   const [busy, setBusy] = useState(false);
-  const [password, setPassword] = useState(() => (account ? '' : randomPassword()));
 
   async function submit(e) {
     e.preventDefault();
@@ -32,8 +25,9 @@ function AccountForm({ token, account, teams, onClose, onSaved }) {
         await api(`/api/admin/users/${account.id}`, { method: 'PATCH', token, body });
         toast(`Saved ${body.name}`, 'success');
       } else {
-        await api('/api/admin/users', { method: 'POST', token, body: { ...body, password } });
-        toast(`Account created. Share the temporary password with ${body.name.split(' ')[0]}.`, 'success');
+        const data = await api('/api/admin/users', { method: 'POST', token, body });
+        onInvited({ account: data.user, link: data.link, emailed: data.emailed, invite: true });
+        return;
       }
       onSaved();
     } catch (err) {
@@ -44,7 +38,7 @@ function AccountForm({ token, account, teams, onClose, onSaved }) {
   }
 
   return (
-    <Modal title={account ? `Edit ${account.name}` : 'Add an account'} onClose={onClose}>
+    <Modal title={account ? `Edit ${account.name}` : 'Invite someone'} onClose={onClose}>
       <form className="form" onSubmit={submit}>
         <label>
           Full name
@@ -93,24 +87,14 @@ function AccountForm({ token, account, teams, onClose, onSaved }) {
             <option value="admin">Admin: manager access plus account management</option>
           </select>
         </label>
-        {!account && (
-          <label>
-            Temporary password
-            <span className="input-with-button">
-              <input value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} maxLength={128} required />
-              <button type="button" className="btn btn-light btn-sm" onClick={() => setPassword(randomPassword())}>
-                New
-              </button>
-            </span>
-          </label>
-        )}
+        {!account && <p className="muted small">They get an email with a link to choose their own password.</p>}
         {account && <p className="muted small">Changing the email changes how they log in. A new access level applies the next time they log in.</p>}
         <div className="form-actions">
           <button type="button" className="btn btn-light" onClick={onClose}>
             Cancel
           </button>
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Saving…' : account ? 'Save' : 'Create account'}
+            {busy ? 'Saving…' : account ? 'Save' : 'Send invite'}
           </button>
         </div>
       </form>
@@ -118,59 +102,39 @@ function AccountForm({ token, account, teams, onClose, onSaved }) {
   );
 }
 
-function ResetPassword({ token, account, onClose }) {
+// Shows where a "choose your password" link went, with the link to copy in case email isn't set up.
+function LinkSent({ account, link, emailed, invite, onClose }) {
   const toast = useToast();
-  const [password, setPassword] = useState(randomPassword);
-  const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
-
-  async function submit(e) {
-    e.preventDefault();
-    setBusy(true);
+  const first = account.name.split(' ')[0];
+  async function copy() {
     try {
-      await api(`/api/admin/users/${account.id}/password`, { method: 'POST', token, body: { password } });
-      setDone(true);
-    } catch (err) {
-      toast(err.message, 'error');
-    } finally {
-      setBusy(false);
+      await navigator.clipboard.writeText(link);
+      toast('Link copied', 'success');
+    } catch {
+      toast('Select the link and copy it', 'error');
     }
   }
-
   return (
-    <Modal title={`Reset password for ${account.name}`} onClose={onClose}>
-      {done ? (
-        <div className="form">
-          <p>
-            The new password is <code className="secret">{password}</code>. Share it with {account.name.split(' ')[0]} privately; it won't be shown again.
-          </p>
-          <div className="form-actions">
-            <button type="button" className="btn btn-primary" onClick={onClose}>
-              Done
-            </button>
-          </div>
+    <Modal title={emailed ? (invite ? 'Invite sent' : 'Password link sent') : 'Share this link'} onClose={onClose}>
+      <div className="form">
+        <p>
+          {emailed
+            ? `We emailed ${account.email} a link to ${invite ? 'set their' : 'choose a new'} password. You can also share the link yourself:`
+            : `We couldn't send the email, so send this link to ${first} yourself (WhatsApp, Slack or email). It lets them choose their password:`}
+        </p>
+        <span className="input-with-button">
+          <input value={link} readOnly onFocus={(e) => e.target.select()} aria-label="Password link" />
+          <button type="button" className="btn btn-light btn-sm" onClick={copy}>
+            Copy
+          </button>
+        </span>
+        <p className="muted small">The link works once and expires in 7 days.</p>
+        <div className="form-actions">
+          <button type="button" className="btn btn-primary" onClick={onClose}>
+            Done
+          </button>
         </div>
-      ) : (
-        <form className="form" onSubmit={submit}>
-          <label>
-            New password
-            <span className="input-with-button">
-              <input value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} maxLength={128} required />
-              <button type="button" className="btn btn-light btn-sm" onClick={() => setPassword(randomPassword())}>
-                New
-              </button>
-            </span>
-          </label>
-          <div className="form-actions">
-            <button type="button" className="btn btn-light" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? 'Saving…' : 'Set password'}
-            </button>
-          </div>
-        </form>
-      )}
+      </div>
     </Modal>
   );
 }
@@ -231,6 +195,15 @@ export default function Admin({ token, user }) {
   const active = (accounts ?? []).filter((a) => a.active);
   const count = (r) => active.filter((a) => a.role === r).length;
 
+  async function sendLink(a) {
+    try {
+      const data = await api(`/api/admin/users/${a.id}/password-link`, { method: 'POST', token });
+      setModal({ type: 'link', account: a, link: data.link, emailed: data.emailed, invite: a.invitePending });
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
   async function reactivate(a) {
     try {
       await api(`/api/admin/users/${a.id}/activate`, { method: 'POST', token });
@@ -254,7 +227,7 @@ export default function Admin({ token, user }) {
           <p className="muted">Add, edit and remove everyone who can log in, from interns to managers and admins.</p>
         </div>
         <button type="button" className="btn btn-primary" onClick={() => setModal({ type: 'edit' })}>
-          <Icon name="plus" size={16} /> Add account
+          <Icon name="plus" size={16} /> Invite someone
         </button>
       </div>
 
@@ -325,7 +298,15 @@ export default function Admin({ token, user }) {
                     <td>{a.position || <span className="muted">—</span>}</td>
                     <td>{a.team ? <Badge tone="blue">{a.team}</Badge> : <span className="muted">—</span>}</td>
                     <td>{a.office || <span className="muted">—</span>}</td>
-                    <td>{a.active ? <span className="dot-label dot-green">Active</span> : <span className="dot-label dot-gray">Deactivated</span>}</td>
+                    <td>
+                      {!a.active ? (
+                        <span className="dot-label dot-gray">Deactivated</span>
+                      ) : a.invitePending ? (
+                        <span className="dot-label dot-amber">Invite sent</span>
+                      ) : (
+                        <span className="dot-label dot-green">Active</span>
+                      )}
+                    </td>
                     <td>
                       <span className="row-actions">
                         {a.active ? (
@@ -333,8 +314,8 @@ export default function Admin({ token, user }) {
                             <button type="button" className="btn btn-light btn-xs" onClick={() => setModal({ type: 'edit', account: a })}>
                               Edit
                             </button>
-                            <button type="button" className="btn btn-light btn-xs" onClick={() => setModal({ type: 'password', account: a })}>
-                              Reset password
+                            <button type="button" className="btn btn-light btn-xs" onClick={() => sendLink(a)}>
+                              {a.invitePending ? 'Resend invite' : 'Reset password'}
                             </button>
                             {a.id !== user.id && (
                               <button type="button" className="btn btn-danger-light btn-xs" onClick={() => setModal({ type: 'remove', account: a })}>
@@ -357,8 +338,20 @@ export default function Admin({ token, user }) {
         )}
       </section>
 
-      {modal?.type === 'edit' && <AccountForm token={token} account={modal.account} teams={teams ?? []} onClose={() => setModal(null)} onSaved={done} />}
-      {modal?.type === 'password' && <ResetPassword token={token} account={modal.account} onClose={() => setModal(null)} />}
+      {modal?.type === 'edit' && (
+        <AccountForm
+          token={token}
+          account={modal.account}
+          teams={teams ?? []}
+          onClose={() => setModal(null)}
+          onSaved={done}
+          onInvited={(sent) => {
+            setModal({ type: 'link', ...sent });
+            reload();
+          }}
+        />
+      )}
+      {modal?.type === 'link' && <LinkSent {...modal} onClose={() => setModal(null)} />}
       {modal?.type === 'remove' && <Deactivate token={token} account={modal.account} onClose={() => setModal(null)} onSaved={done} />}
     </div>
   );

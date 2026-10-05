@@ -19,7 +19,7 @@ import CompanySignup from './pages/CompanySignup.jsx';
 import MyTasks from './pages/MyTasks.jsx';
 import Workload from './pages/Workload.jsx';
 import { OFFICES, WorkplaceContext } from './workplace.js';
-import { rootUrl, useWorkspaceInfo } from './workspace.js';
+import { hashParam, rootUrl, useWorkspaceInfo } from './workspace.js';
 
 // Sidebar badges: what is waiting for this person.
 function useCounts(session, path) {
@@ -200,10 +200,12 @@ function WorkspaceApp({ workspace, missing, rootDomain }) {
     <ToastProvider>
       {!workspace ? (
         missing ? <NoWorkspace slug={missing} rootDomain={rootDomain} /> : <PublicSite path={path} rootDomain={rootDomain} />
-      ) : !session ? (
+      ) : !session || path[0] === 'set-password' ? (
         <AuthPage
+          key={path[0] === 'set-password' ? 'set-password' : 'login'}
           workspace={workspace}
           rootDomain={rootDomain}
+          linkToken={path[0] === 'set-password' ? hashParam('token') : ''}
           onSignedIn={signIn}
         />
       ) : !workplace ? (

@@ -7,6 +7,7 @@ import com.dailyupdate.common.RateLimiter;
 import com.dailyupdate.common.SecuritySupport;
 import com.dailyupdate.common.TenantContext;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -25,17 +26,19 @@ public class AuthController {
 
     private final UserRepository users;
     private final Workspaces workspaces;
+    private final PasswordLinks passwordLinks;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RateLimiter credentialLimiter;
     // Checked when the email is unknown so both failure paths take the same time.
     private final String dummyHash;
 
-    public AuthController(UserRepository users, Workspaces workspaces,
+    public AuthController(UserRepository users, Workspaces workspaces, PasswordLinks passwordLinks,
             PasswordEncoder passwordEncoder, JwtService jwtService,
             @Value("${app.rate-limit.credentials-per-15-min}") int limit) {
         this.users = users;
         this.workspaces = workspaces;
+        this.passwordLinks = passwordLinks;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.credentialLimiter = new RateLimiter(limit, Duration.ofMinutes(15));
@@ -48,6 +51,14 @@ public class AuthController {
         limit(request);
         Company company = workspaces.require(request);
         return TenantContext.call(company.id(), () -> login(body, company));
+    }
+
+    /** Choosing a password from an emailed invite or reset link. Logs the person in. */
+    @PostMapping("/set-password")
+    public Map<String, Object> setPassword(@Valid @RequestBody Requests.SetPassword body, HttpServletRequest request) {
+        limit(request);
+        Company company = workspaces.require(request);
+        return TenantContext.call(company.id(), () -> session(passwordLinks.use(body.token(), body.password()), company));
     }
 
     private Map<String, Object> login(Requests.Login body, Company company) {

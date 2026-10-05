@@ -32,6 +32,11 @@ app:
   default-workspace:
     slug: ${DEFAULT_WORKSPACE:app}
     name: ${DEFAULT_WORKSPACE_NAME:WorkPulseLens}
+  # Invite and password emails go through Resend (https://resend.com). Without a key, admins copy
+  # the link from the Accounts page instead.
+  mail:
+    resend-api-key: ${RESEND_API_KEY:}
+    from: ${MAIL_FROM:WorkPulseLens <support@workpulselens.com>}
   rate-limit:
     credentials-per-15-min: ${AUTH_RATE_LIMIT:20}
     signups-per-hour: ${SIGNUP_RATE_LIMIT:5}

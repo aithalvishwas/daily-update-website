@@ -200,6 +200,7 @@ All endpoints except sign-up, login and the `/api/companies` lookups need `Autho
 | GET | `/api/companies/current` | anyone | Which workspace this address is (`null` on the public site) and the root domain |
 | GET | `/api/companies/tls-check?domain=` | Caddy | 200 if the address is ours, so Caddy may get it a certificate |
 | POST | `/api/auth/login` | anyone | Log in to this workspace, returns a token |
+| POST | `/api/auth/set-password` `{token, password}` | anyone | Choose a password from an invite or reset link, returns a token |
 | GET | `/api/auth/me` | any user | Current user |
 | PATCH | `/api/auth/me` `{office}` | any user | Pick your own office (decides your holidays) |
 | GET | `/api/workplace` | any user | `weekendRequests` flag, offices, and holidays from last year to next year |
@@ -210,9 +211,10 @@ All endpoints except sign-up, login and the `/api/companies` lookups need `Autho
 | GET | `/api/users/{id}` | manager | One user |
 | POST | `/api/users` | manager | Create an employee or manager with team and position |
 | PATCH | `/api/users/{id}` `{team, position, role}` | manager | Move teams, promote, change role (not on admins) |
-| GET / POST | `/api/admin/users` | admin | Every account, including deactivated / create any account |
+| GET / POST | `/api/admin/users` | admin | Every account, including deactivated / invite someone (without a `password`, they get an email link to choose one; returns `link` and `emailed`) |
 | PATCH | `/api/admin/users/{id}` `{name, email, team, position, office, role}` | admin | Edit an account, including the login email |
-| POST | `/api/admin/users/{id}/password` `{password}` | admin | Set a new password |
+| POST | `/api/admin/users/{id}/password-link` | admin | Email a new invite or password reset link (also returned as `link`) |
+| POST | `/api/admin/users/{id}/password` `{password}` | admin | Set a new password directly |
 | DELETE / POST | `/api/admin/users/{id}`, `/api/admin/users/{id}/activate` | admin | Deactivate / reactivate (history is kept) |
 | GET / POST | `/api/teams` | any user / manager | List teams with member counts / add a team |
 | POST | `/api/logs` `{workDate, tasks, hours, blockers, epicId, attachmentIds}` | any user | Create or update the caller's log for a date; a new blocker alerts managers |

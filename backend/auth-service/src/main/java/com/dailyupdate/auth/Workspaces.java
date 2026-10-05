@@ -71,6 +71,19 @@ public class Workspaces {
                 .orElseThrow(() -> new ApiException(404, "There is no workspace at " + slug + "." + rootDomain));
     }
 
+    /**
+     * The company's own address for links in emails, built from its slug rather than the request's
+     * Host header. On your computer it keeps the port (apple.localhost:8080).
+     */
+    public String address(Company company, HttpServletRequest request) {
+        String host = company.slug() + "." + rootDomain;
+        String header = request.getHeader("Host");
+        if ("localhost".equals(rootDomain) && header != null && header.matches(".*:[0-9]{1,5}")) {
+            host += header.substring(header.lastIndexOf(':'));
+        }
+        return host;
+    }
+
     public Optional<Company> find(String slug) {
         return companies.findBySlug(slug);
     }

@@ -75,6 +75,26 @@ nano config/.env      # set ANTHROPIC_API_KEY=..., then Ctrl+O, Enter, Ctrl+X
 sudo ./config/deploy.sh
 ```
 
+## Invite emails (optional)
+
+When an admin invites someone on the **Accounts** page, WorkPulseLens emails them a link to choose
+their password. Until email is set up, the Accounts page shows the link so the admin can send it
+themselves. To turn email on:
+
+1. Sign up at <https://resend.com> (free for 3,000 emails a month).
+2. In Resend, open **Domains**, add `workpulselens.com`, and add the DNS records it shows in
+   GoDaddy (**DNS** → **Add New Record**, copying each Type, Name and Value). Wait until Resend
+   says the domain is verified.
+3. In Resend, open **API Keys**, create a key with "Sending access", and copy it.
+4. On the server, add it to `config/.env` and redeploy:
+   ```
+   cd daily-update-website
+   echo 'RESEND_API_KEY=re_your_key_here' >> config/.env
+   sudo ./config/deploy.sh workpulselens.com
+   ```
+
+Emails come from `support@workpulselens.com`. Set `MAIL_FROM` in `config/.env` to change it.
+
 ## Updating
 
 ```sh
