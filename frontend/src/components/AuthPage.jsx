@@ -14,8 +14,9 @@ const FEATURES = [
 ];
 
 // Log in on a company's own address (google.workpulselens.com). There is no sign-up here: the
-// company's admin adds people from the Accounts page.
-export default function AuthPage({ workspace, rootDomain, onSignedIn }) {
+// company's admin invites people from the Accounts page, and the emailed link (linkToken) opens
+// this page to choose a password.
+export default function AuthPage({ workspace, rootDomain, linkToken, onSignedIn }) {
   const [busy, setBusy] = useState(false);
   const [email] = useState(() => hashParam('email'));
   const toast = useToast();
@@ -28,9 +29,16 @@ export default function AuthPage({ workspace, rootDomain, onSignedIn }) {
   async function submit(e) {
     e.preventDefault();
     const form = Object.fromEntries(new FormData(e.currentTarget));
+    if (linkToken && form.password !== form.confirm) {
+      toast("The passwords don't match", 'error');
+      return;
+    }
     setBusy(true);
     try {
-      const data = await api('/api/auth/login', { method: 'POST', body: form });
+      const data = linkToken
+        ? await api('/api/auth/set-password', { method: 'POST', body: { token: linkToken, password: form.password } })
+        : await api('/api/auth/login', { method: 'POST', body: form });
+      if (linkToken) toast(`Welcome to ${workspace.name}!`, 'success');
       onSignedIn({ token: data.token, user: data.user });
     } catch (err) {
       toast(err.message, 'error');
@@ -72,23 +80,46 @@ export default function AuthPage({ workspace, rootDomain, onSignedIn }) {
           <span className="auth-workspace">
             {workspace.slug}.{rootDomain}
           </span>
-          <h2>Log in to {workspace.name}</h2>
-          <p className="muted">Post your update or review your team.</p>
+          {linkToken ? (
+            <>
+              <h2>Choose your password</h2>
+              <p className="muted">You'll use it to log in to {workspace.name}.</p>
+              <form key="set-password" className="form" onSubmit={submit}>
+                <label>
+                  New password
+                  <input name="password" type="password" minLength={8} maxLength={128} autoComplete="new-password" required />
+                </label>
+                <label>
+                  Type it again
+                  <input name="confirm" type="password" minLength={8} maxLength={128} autoComplete="new-password" required />
+                </label>
+                <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
+                  {busy ? 'Please wait…' : 'Set password and log in'}
+                </button>
+                <p className="hint">At least 8 characters.</p>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2>Log in to {workspace.name}</h2>
+              <p className="muted">Post your update or review your team.</p>
 
-          <form className="form" onSubmit={submit}>
-            <label>
-              Email
-              <input name="email" type="email" autoComplete="email" defaultValue={email} required />
-            </label>
-            <label>
-              Password
-              <input name="password" type="password" maxLength={128} autoComplete="current-password" required />
-            </label>
-            <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-              {busy ? 'Please wait…' : 'Log in'}
-            </button>
-            <p className="hint">New here? Ask your admin to add you from the Accounts page.</p>
-          </form>
+              <form key="login" className="form" onSubmit={submit}>
+                <label>
+                  Email
+                  <input name="email" type="email" autoComplete="email" defaultValue={email} required />
+                </label>
+                <label>
+                  Password
+                  <input name="password" type="password" maxLength={128} autoComplete="current-password" required />
+                </label>
+                <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
+                  {busy ? 'Please wait…' : 'Log in'}
+                </button>
+                <p className="hint">New here? Ask your admin to invite you from the Accounts page.</p>
+              </form>
+            </>
+          )}
         </div>
       </section>
     </div>

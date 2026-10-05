@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class UserRepository {
 
-    private static final String COLUMNS = "id, name, email, password_hash, role, team, position, office, active";
+    private static final String COLUMNS = "id, name, email, password_hash, role, team, position, office, active, invite_pending";
 
     private final JdbcClient jdbc;
 
@@ -105,8 +105,16 @@ public class UserRepository {
                 .single();
     }
 
+    /** Setting a password also ends a pending invite. */
     public void setPassword(long id, String passwordHash) {
-        jdbc.sql("UPDATE users SET password_hash = :hash WHERE id = :id").param("id", id).param("hash", passwordHash).update();
+        jdbc.sql("UPDATE users SET password_hash = :hash, invite_pending = false WHERE id = :id")
+                .param("id", id)
+                .param("hash", passwordHash)
+                .update();
+    }
+
+    public void markInvited(long id) {
+        jdbc.sql("UPDATE users SET invite_pending = true WHERE id = :id").param("id", id).update();
     }
 
     public User setActive(long id, boolean active) {

@@ -15,7 +15,7 @@ final class Requests {
             @NotBlank(message = "A valid email is required")
             @Email(message = "A valid email is required")
             @Size(max = 255, message = "A valid email is required") String email,
-            @NotBlank(message = "Password must be 8 to 128 characters")
+            // Left out: they get an email link to choose their own password.
             @Size(min = 8, max = 128, message = "Password must be 8 to 128 characters") String password,
             @Size(max = 100, message = "Team must be at most 100 characters") String team,
             @Size(max = 100, message = "Position must be at most 100 characters") String position,
@@ -55,6 +55,11 @@ final class Requests {
     record MySettings(String office) {}
 
     record Login(String email, String password) {}
+
+    record SetPassword(
+            String token,
+            @NotBlank(message = "Password must be 8 to 128 characters")
+            @Size(min = 8, max = 128, message = "Password must be 8 to 128 characters") String password) {}
 
     record CompanySignup(
             @NotBlank(message = "Company name is required (max 100 characters)")

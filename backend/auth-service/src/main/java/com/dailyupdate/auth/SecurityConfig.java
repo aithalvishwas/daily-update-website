@@ -17,7 +17,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
         return SecuritySupport.apply(http, jwtService)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/companies")
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/set-password", "/api/companies")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/companies/current", "/api/companies/tls-check").permitAll()
                         .requestMatchers("/actuator/health", "/error").permitAll()
