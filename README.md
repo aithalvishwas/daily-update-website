@@ -18,13 +18,22 @@ WorkPulseLens is a work app for teams: employees log what they did each day agai
 
 ![Admin accounts page](docs/admin.png)
 
-The public landing page at workpulselens.com (signed-out visitors land here; *Sign in* and *Get started* open the login and sign-up forms):
+The public landing page at workpulselens.com. Companies sign up here and each gets its own workspace at `<company>.workpulselens.com`; nobody logs in on workpulselens.com itself:
 
 ![WorkPulseLens landing page](docs/landing.png)
 
 The login page keeps the three.js 3D scene:
 
 ![Login page with the 3D scene](docs/login.png)
+
+## Company workspaces
+
+- A company signs up on **workpulselens.com** with its name, size and the first admin's name, email and password. Its workspace address is made from the company name automatically (*Google* gets `google.workpulselens.com`, and a second *Google* gets `google-2`), and the person who signed up is its admin.
+- Logging in and joining as an employee only happen on a company's own address, and only for that company's accounts. The same email can belong to accounts in two companies.
+- Every company's data is kept apart: people, teams, epics, tasks, logs, summaries, issues, requests, notifications, attachments, holidays and settings.
+- Everything from before workspaces existed lives in the default workspace, `app.workpulselens.com` (change the address with `DEFAULT_WORKSPACE` in `config/.env` before the first start).
+
+![Company sign-up on workpulselens.com](docs/company-signup.png)
 
 ## Features
 
@@ -69,7 +78,7 @@ The login page keeps the three.js 3D scene:
 daily-update-website/
 ├── frontend/   React + Vite website (three.js 3D scenes) and the nginx gateway
 ├── backend/    Java 21 / Spring Boot microservices (Maven multi-module)
-│   ├── common/           shared JWT security, error handling, rate limiting
+│   ├── common/           shared JWT security, workspace data isolation, error handling, rate limiting
 │   ├── auth-service/     users, passwords, login tokens
 │   ├── worklog-service/  daily work logs
 │   ├── summary-service/  AI summaries (calls Claude)
@@ -83,7 +92,8 @@ daily-update-website/
 ```
 Browser ──► frontend (nginx: React build + API gateway, :8080)
               ├── /api/auth, /api/users, /api/teams,  ──► auth-service     (:4001)
-              │   /api/admin, /api/workplace
+              │   /api/admin, /api/workplace,
+              │   /api/companies
               ├── /api/logs                           ──► worklog-service  (:4002)
               ├── /api/summaries                      ──► summary-service  (:4003) ──► Claude API
               └── /api/epics, /api/issues,            ──► project-service  (:4004) ──► uploads volume
@@ -96,7 +106,7 @@ Browser ──► frontend (nginx: React build + API gateway, :8080)
 | Service | Owns | Notes |
 |---|---|---|
 | frontend | React app | nginx serves the build, routes `/api/*` to the right service and sets security headers |
-| auth-service | `users`, `teams`, `app_settings`, `holidays` tables | Sign-up, login, roles (employee, manager, admin), positions, teams, offices, deactivation, feature flags, office holidays, first admin and manager seeded from `.env` |
+| auth-service | `companies`, `users`, `teams`, `app_settings`, `holidays` tables | Company sign-up and workspaces, sign-up, login, roles (employee, manager, admin), positions, teams, offices, deactivation, feature flags, office holidays, first admin and manager seeded from `.env` |
 | worklog-service | `work_logs` table | One entry per employee per day, optionally linked to an epic; a new blocker becomes an alert |
 | summary-service | `summaries` table | Fetches logs from worklog-service, asks Claude to summarize, saves the result |
 | project-service | `epics`, `epic_members`, `tasks`, `task_comments`, `milestones`, `issues`, `issue_replies`, `weekend_requests`, `notifications`, `attachments` | Epics and their health, task boards, milestones, blockers with replies, in-app notifications, comp-off/paid requests, file uploads |
@@ -112,6 +122,7 @@ Export your model from Blender as **glTF Binary** (`.glb`, no Draco compression)
 
 ## Security
 
+- Workspaces: every company-owned table has a `company_id` column and a PostgreSQL row-level security policy. A login token carries its company, and while a request is handled each database connection switches to a restricted role that can only see and write that company's rows, so a missed filter in a query can't leak another company's data. Logging in checks the account against the workspace in the address, and Caddy only gets HTTPS certificates for workspaces that exist.
 - Passwords hashed with BCrypt (cost 12). Login gives the same error, in the same time, for an unknown email and a wrong password.
 - Signed JWT login tokens (HS256, 8 hour expiry) checked by Spring Security in every service; stateless, no cookies.
 - Role rules: employees can only read and change their own logs, issues and requests, and only see epics they are on; only managers can list people, change teams, positions and roles, manage epics, read other people's logs, decide requests and generate summaries. Self sign-up always creates an employee.
@@ -151,7 +162,7 @@ Then build and start everything (the first build downloads Maven and npm package
 docker compose -f config/docker-compose.yml up -d --build
 ```
 
-Open http://localhost:8080. Log in as the admin or manager from `config/.env`, or use **Sign up** to create employee accounts.
+Open http://localhost:8080 for the public site, where you can sign a company up. Each workspace opens at `http://<address>.localhost:8080` (Chrome, Edge and Firefox send `*.localhost` to your own computer). The admin and manager from `config/.env` are in the default workspace: log in at http://app.localhost:8080, or use **Sign up** there to create employee accounts.
 
 Stop with `docker compose -f config/docker-compose.yml down` (add `-v` to also delete the database).
 
@@ -181,12 +192,15 @@ cd frontend && npm install && npm run dev
 
 ## API
 
-All endpoints except sign-up and login need `Authorization: Bearer <token>`. Errors come back as `{"error": "..."}`.
+All endpoints except sign-up, login and the `/api/companies` lookups need `Authorization: Bearer <token>`. Errors come back as `{"error": "..."}`. Login and employee sign-up work on a workspace's own address only.
 
 | Method | Path | Who | Purpose |
 |---|---|---|---|
-| POST | `/api/auth/register` | anyone | Create an employee account, returns a token |
-| POST | `/api/auth/login` | anyone | Log in, returns a token |
+| POST | `/api/companies` `{companyName, name, email, password, orgSize, phone}` | anyone | Sign a company up; creates its workspace (address made from the company name) with that person as admin |
+| GET | `/api/companies/current` | anyone | Which workspace this address is (`null` on the public site) and the root domain |
+| GET | `/api/companies/tls-check?domain=` | Caddy | 200 if the address is ours, so Caddy may get it a certificate |
+| POST | `/api/auth/register` | anyone | Join this workspace as an employee, returns a token |
+| POST | `/api/auth/login` | anyone | Log in to this workspace, returns a token |
 | GET | `/api/auth/me` | any user | Current user |
 | PATCH | `/api/auth/me` `{office}` | any user | Pick your own office (decides your holidays) |
 | GET | `/api/workplace` | any user | `weekendRequests` flag, offices, and holidays from last year to next year |

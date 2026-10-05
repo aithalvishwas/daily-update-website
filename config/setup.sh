@@ -55,3 +55,4 @@ if ! grep -q '^ANTHROPIC_API_KEY=.' "$ENV_FILE"; then
   echo "Tip: add your ANTHROPIC_API_KEY to config/.env for AI summaries (optional)."
 fi
 echo "Start WorkPulseLens with: docker compose -f config/docker-compose.yml up -d --build"
+echo "Then log in to the default workspace at http://$(grep '^DEFAULT_WORKSPACE=' "$ENV_FILE" | cut -d= -f2- | grep . || echo app).localhost:8080"

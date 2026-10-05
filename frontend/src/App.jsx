@@ -15,9 +15,11 @@ import Admin from './pages/Admin.jsx';
 import WorkplaceSettings from './pages/WorkplaceSettings.jsx';
 import MySettings from './pages/MySettings.jsx';
 import Landing from './pages/Landing.jsx';
+import CompanySignup from './pages/CompanySignup.jsx';
 import MyTasks from './pages/MyTasks.jsx';
 import Workload from './pages/Workload.jsx';
 import { OFFICES, WorkplaceContext } from './workplace.js';
+import { rootUrl, useWorkspaceInfo } from './workspace.js';
 
 // Sidebar badges: what is waiting for this person.
 function useCounts(session, path) {
@@ -100,8 +102,42 @@ function useWorkplaceData(token) {
   return [data, reload];
 }
 
+// workpulselens.com itself: the marketing page and company sign-up. Nobody logs in here.
+function PublicSite({ path, rootDomain }) {
+  if (path[0] === 'signup' || path[0] === 'login') return <CompanySignup rootDomain={rootDomain} />;
+  return <Landing />;
+}
+
+function NoWorkspace({ slug, rootDomain }) {
+  return (
+    <main className="boot-message">
+      <h1>No workspace here</h1>
+      <p className="muted">
+        There is no company at {slug}.{rootDomain}. Check the address, or sign your company up.
+      </p>
+      <a className="btn btn-primary" href={rootUrl(rootDomain, '/#/signup')}>
+        Sign up your company
+      </a>
+    </main>
+  );
+}
+
 export default function App() {
-  const [session, setSession] = useState(loadSession);
+  const { info, error } = useWorkspaceInfo();
+  if (error) {
+    return (
+      <main className="boot-message">
+        <h1>WorkPulseLens is not reachable</h1>
+        <p className="muted">Please try again in a minute.</p>
+      </main>
+    );
+  }
+  if (!info) return <div className="boot" aria-busy="true" />;
+  return <WorkspaceApp workspace={info.workspace} missing={info.missing} rootDomain={info.rootDomain} />;
+}
+
+function WorkspaceApp({ workspace, missing, rootDomain }) {
+  const [session, setSession] = useState(() => (workspace ? loadSession() : null));
   const path = useRoute();
   const counts = useCounts(session, path.join('/'));
   const [workplaceData, reloadWorkplace] = useWorkplaceData(session?.token);
@@ -162,17 +198,21 @@ export default function App() {
 
   return (
     <ToastProvider>
-      {!session ? (
-        path[0] === 'login' || path[0] === 'signup' ? (
-          <AuthPage key={path[0]} initialTab={path[0] === 'signup' ? 'register' : 'login'} onSignedIn={signIn} />
-        ) : (
-          <Landing />
-        )
+      {!workspace ? (
+        missing ? <NoWorkspace slug={missing} rootDomain={rootDomain} /> : <PublicSite path={path} rootDomain={rootDomain} />
+      ) : !session ? (
+        <AuthPage
+          key={path[0] === 'signup' ? 'signup' : 'login'}
+          initialTab={path[0] === 'signup' ? 'register' : 'login'}
+          workspace={workspace}
+          rootDomain={rootDomain}
+          onSignedIn={signIn}
+        />
       ) : !workplace ? (
         <div className="boot" aria-busy="true" />
       ) : (
         <WorkplaceContext.Provider value={workplace}>
-          <Shell user={session.user} token={session.token} section={path[0] ?? ''} counts={counts} onSignOut={signOut}>
+          <Shell user={session.user} token={session.token} workspace={workspace} section={path[0] ?? ''} counts={counts} onSignOut={signOut}>
             <Page session={session} path={path} onUserChanged={updateUser} />
           </Shell>
         </WorkplaceContext.Provider>

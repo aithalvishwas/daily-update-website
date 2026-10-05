@@ -26,7 +26,7 @@ public class TeamRepository {
 
     /** Creates the team if it doesn't exist yet. */
     public void ensure(String name) {
-        jdbc.sql("INSERT INTO teams (name) VALUES (:name) ON CONFLICT (name) DO NOTHING")
+        jdbc.sql("INSERT INTO teams (name) VALUES (:name) ON CONFLICT (company_id, name) DO NOTHING")
                 .param("name", name)
                 .update();
     }

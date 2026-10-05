@@ -31,12 +31,13 @@ public class JwtService {
         this.ttl = Duration.ofHours(ttlHours);
     }
 
-    public String sign(long userId, String role, String name) {
+    public String sign(long userId, String role, String name, long companyId) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(Long.toString(userId))
                 .claim("role", role)
                 .claim("name", name)
+                .claim("cid", companyId)
                 .issuer(ISSUER)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(ttl)))
@@ -56,7 +57,9 @@ public class JwtService {
             return new AuthUser(
                     Long.parseLong(claims.getSubject()),
                     claims.get("role", String.class),
-                    claims.get("name", String.class));
+                    claims.get("name", String.class),
+                    // Tokens from before workspaces existed have no company and are rejected.
+                    claims.get("cid", Long.class));
         } catch (RuntimeException e) {
             throw new JwtException("Malformed token claims", e);
         }

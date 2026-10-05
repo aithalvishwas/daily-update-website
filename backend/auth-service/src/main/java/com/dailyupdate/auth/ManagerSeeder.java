@@ -1,15 +1,21 @@
 package com.dailyupdate.auth;
 
 import com.dailyupdate.common.AuthUser;
+import com.dailyupdate.common.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-/** Creates the first admin (ADMIN_*) and first manager (MANAGER_*) when none exists yet. */
+/**
+ * Creates the first admin (ADMIN_*) and first manager (MANAGER_*) of the default workspace when it
+ * has none yet. Companies that sign up get their admin from the sign-up form.
+ */
 @Component
+@Order(1)
 public class ManagerSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(ManagerSeeder.class);
@@ -36,8 +42,10 @@ public class ManagerSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        seed(admin);
-        seed(manager);
+        TenantContext.run(1, () -> {
+            seed(admin);
+            seed(manager);
+        });
     }
 
     private void seed(Seed seed) {

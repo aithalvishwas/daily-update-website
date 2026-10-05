@@ -129,3 +129,97 @@ CREATE TABLE IF NOT EXISTS milestones (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS milestones_epic_idx ON milestones (epic_id, due_date);
+
+-- Workspaces: every company's data is kept apart. Rows from before workspaces existed belong to
+-- company 1. company_id is filled in automatically from the signed-in user's workspace, and the
+-- company_isolation policies hide other companies' rows (see TenantDatabase in common).
+ALTER TABLE epics ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE epics SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE epics ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE epics ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE epics ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON epics;
+CREATE POLICY company_isolation ON epics
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS epics_company_idx ON epics (company_id);
+ALTER TABLE epic_members ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE epic_members SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE epic_members ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE epic_members ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE epic_members ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON epic_members;
+CREATE POLICY company_isolation ON epic_members
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS epic_members_company_idx ON epic_members (company_id);
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE issues SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE issues ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE issues ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE issues ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON issues;
+CREATE POLICY company_isolation ON issues
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS issues_company_idx ON issues (company_id);
+ALTER TABLE issue_replies ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE issue_replies SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE issue_replies ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE issue_replies ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE issue_replies ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON issue_replies;
+CREATE POLICY company_isolation ON issue_replies
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS issue_replies_company_idx ON issue_replies (company_id);
+ALTER TABLE weekend_requests ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE weekend_requests SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE weekend_requests ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE weekend_requests ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE weekend_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON weekend_requests;
+CREATE POLICY company_isolation ON weekend_requests
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS weekend_requests_company_idx ON weekend_requests (company_id);
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE notifications SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE notifications ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE notifications ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON notifications;
+CREATE POLICY company_isolation ON notifications
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS notifications_company_idx ON notifications (company_id);
+ALTER TABLE attachments ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE attachments SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE attachments ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE attachments ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE attachments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON attachments;
+CREATE POLICY company_isolation ON attachments
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS attachments_company_idx ON attachments (company_id);
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE tasks SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE tasks ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE tasks ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON tasks;
+CREATE POLICY company_isolation ON tasks
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS tasks_company_idx ON tasks (company_id);
+ALTER TABLE task_comments ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE task_comments SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE task_comments ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE task_comments ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE task_comments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON task_comments;
+CREATE POLICY company_isolation ON task_comments
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS task_comments_company_idx ON task_comments (company_id);
+ALTER TABLE milestones ADD COLUMN IF NOT EXISTS company_id BIGINT;
+UPDATE milestones SET company_id = 1 WHERE company_id IS NULL;
+ALTER TABLE milestones ALTER COLUMN company_id SET DEFAULT CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT);
+ALTER TABLE milestones ALTER COLUMN company_id SET NOT NULL;
+ALTER TABLE milestones ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS company_isolation ON milestones;
+CREATE POLICY company_isolation ON milestones
+    USING (company_id = CAST(NULLIF(current_setting('app.company_id', true), '') AS BIGINT));
+CREATE INDEX IF NOT EXISTS milestones_company_idx ON milestones (company_id);

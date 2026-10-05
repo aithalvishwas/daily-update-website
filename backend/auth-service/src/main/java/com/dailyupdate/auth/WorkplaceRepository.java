@@ -30,7 +30,7 @@ public class WorkplaceRepository {
     public void saveSetting(String key, String value) {
         jdbc.sql("""
                         INSERT INTO app_settings (key, value) VALUES (:key, :value)
-                        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""")
+                        ON CONFLICT (company_id, key) DO UPDATE SET value = EXCLUDED.value""")
                 .param("key", key)
                 .param("value", value)
                 .update();
@@ -38,7 +38,7 @@ public class WorkplaceRepository {
 
     /** Only adds the setting when it isn't there yet. Returns true if it was added. */
     public boolean addSettingIfMissing(String key, String value) {
-        return jdbc.sql("INSERT INTO app_settings (key, value) VALUES (:key, :value) ON CONFLICT (key) DO NOTHING")
+        return jdbc.sql("INSERT INTO app_settings (key, value) VALUES (:key, :value) ON CONFLICT (company_id, key) DO NOTHING")
                 .param("key", key)
                 .param("value", value)
                 .update() > 0;

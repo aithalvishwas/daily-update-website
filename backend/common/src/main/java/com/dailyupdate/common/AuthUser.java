@@ -1,7 +1,7 @@
 package com.dailyupdate.common;
 
-/** The signed-in user, taken from a verified login token. */
-public record AuthUser(long id, String role, String name) {
+/** The signed-in user, taken from a verified login token. {@code companyId} is their workspace. */
+public record AuthUser(long id, String role, String name, long companyId) {
 
     public static final String EMPLOYEE = "employee";
     public static final String MANAGER = "manager";

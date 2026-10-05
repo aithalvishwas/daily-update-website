@@ -5,6 +5,7 @@ import com.dailyupdate.common.AuthUser;
 import com.dailyupdate.common.JwtService;
 import com.dailyupdate.common.RateLimiter;
 import com.dailyupdate.common.SecuritySupport;
+import com.dailyupdate.common.TenantContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.time.Duration;
@@ -27,35 +28,47 @@ public class AuthController {
 
     private final UserRepository users;
     private final UserService userService;
+    private final Workspaces workspaces;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RateLimiter credentialLimiter;
     // Checked when the email is unknown so both failure paths take the same time.
     private final String dummyHash;
 
-    public AuthController(UserRepository users, UserService userService, PasswordEncoder passwordEncoder,
-            JwtService jwtService, @Value("${app.rate-limit.credentials-per-15-min}") int limit) {
+    public AuthController(UserRepository users, UserService userService, Workspaces workspaces,
+            PasswordEncoder passwordEncoder, JwtService jwtService,
+            @Value("${app.rate-limit.credentials-per-15-min}") int limit) {
         this.users = users;
         this.userService = userService;
+        this.workspaces = workspaces;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.credentialLimiter = new RateLimiter(limit, Duration.ofMinutes(15));
         this.dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
-    /** Self sign-up always creates an employee. Managers are seeded or created by a manager. */
+    /**
+     * Joining a company's workspace (on its own address) always creates an employee. Managers are
+     * created by an admin or manager.
+     */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> register(@Valid @RequestBody Requests.Register body, HttpServletRequest request) {
         limit(request);
-        User user = userService.create(body.name(), body.email(), body.password(), body.team(), body.position(), body.office(),
-                AuthUser.EMPLOYEE);
-        return session(user);
+        Company company = workspaces.require(request);
+        return TenantContext.call(company.id(), () -> session(userService.create(body.name(), body.email(),
+                body.password(), body.team(), body.position(), body.office(), AuthUser.EMPLOYEE), company));
     }
 
+    /** Logging in only works on a company's own address, and only for that company's accounts. */
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody Requests.Login body, HttpServletRequest request) {
         limit(request);
+        Company company = workspaces.require(request);
+        return TenantContext.call(company.id(), () -> login(body, company));
+    }
+
+    private Map<String, Object> login(Requests.Login body, Company company) {
         String password = body.password() == null ? "" : body.password();
         var user = users.findByEmail(UserService.normalizeEmail(body.email()));
         boolean ok = passwordEncoder.matches(password, user.map(User::passwordHash).orElse(dummyHash));
@@ -66,12 +79,18 @@ public class AuthController {
         if (!user.get().active()) {
             throw new ApiException(403, "This account has been deactivated. Ask your admin.");
         }
-        return session(user.get());
+        return session(user.get(), company);
     }
 
     @GetMapping("/me")
-    public Map<String, Object> me() {
+    public Map<String, Object> me(HttpServletRequest request) {
         AuthUser current = SecuritySupport.currentUser();
+        // A login only counts on its own workspace's address.
+        workspaces.slugOf(request).ifPresent(slug -> {
+            if (workspaces.find(slug).map(Company::id).filter(id -> id == current.companyId()).isEmpty()) {
+                throw new ApiException(401, "Please log in to this workspace");
+            }
+        });
         // The website checks this on load, so a deactivated account is signed out right away.
         User user = users.findById(current.id()).filter(User::active)
                 .orElseThrow(() -> new ApiException(401, "This account is no longer active"));
@@ -87,8 +106,9 @@ public class AuthController {
         return Map.of("user", users.setOffice(current.id(), Workplace.office(body.office())).toPublic());
     }
 
-    private Map<String, Object> session(User user) {
-        return Map.of("token", jwtService.sign(user.id(), user.role(), user.name()), "user", user.toPublic());
+    private Map<String, Object> session(User user, Company company) {
+        return Map.of("token", jwtService.sign(user.id(), user.role(), user.name(), company.id()),
+                "user", user.toPublic(), "workspace", company.toPublic());
     }
 
     private void limit(HttpServletRequest request) {

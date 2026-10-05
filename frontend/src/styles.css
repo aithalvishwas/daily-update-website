@@ -225,6 +225,8 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
   z-index: 30;
 }
 .sidebar-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 1.05rem; padding: 4px 8px 20px; text-decoration: none !important; }
+.sidebar-brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.sidebar-brand-text small { color: #9fb3c8; font-size: 0.78rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
 .nav-item {
   position: relative;
@@ -719,7 +721,10 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
 .feature-list span { color: #b8c9da; font-size: 0.88rem; }
 .auth-panel { display: flex; align-items: center; justify-content: center; padding: 32px 16px; background: var(--bg); }
 .auth-card { width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow-lg); }
-.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.15rem; letter-spacing: -0.02em; }
+.logo-word b { font-weight: 800; }
+.auth-workspace { display: inline-flex; align-self: flex-start; padding: 3px 10px; border-radius: 999px; background: var(--gray-soft); color: var(--muted); font-size: 0.82rem; }
+.boot-message { min-height: 100vh; display: grid; place-content: center; gap: 12px; padding: 16px; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -855,3 +860,44 @@ legend { font-weight: 600; font-size: 0.85rem; padding: 0 4px; }
   .task-list li { flex-wrap: wrap; }
   .task-list-meta { width: 100%; justify-content: flex-start; padding-left: 30px; }
 }
+
+/* ---------- Company sign-up (public site) ---------- */
+.cs { --cs-ink: #1b1b1b; --cs-page: #f8f8f5; --cs-card: #efefeb; --cs-line: #8f8f8a; min-height: 100vh; background: var(--cs-page); color: var(--cs-ink); }
+.cs-header { padding: 18px clamp(16px, 4vw, 64px); border-bottom: 1px solid #e4e4df; }
+.cs-brand { color: inherit; text-decoration: none; display: inline-flex; }
+.cs-brand .logo { font-size: 1.5rem; gap: 12px; }
+.cs-brand .logo img { width: 36px; height: 36px; }
+.cs-main { max-width: 1320px; margin: 0 auto; padding: clamp(24px, 4vw, 44px) clamp(16px, 4vw, 64px) 64px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 54%); gap: clamp(24px, 4vw, 64px); align-items: start; }
+.cs-intro { padding-top: 24px; display: flex; flex-direction: column; gap: 28px; }
+.cs-intro h1, .cs-title { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -0.01em; }
+.cs-intro h1 { font-size: clamp(1.8rem, 3vw, 2.5rem); line-height: 1.15; }
+.cs-points { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 18px; font-size: 1.08rem; line-height: 1.5; }
+.cs-points li { display: flex; gap: 14px; align-items: flex-start; }
+.cs-tick { flex: none; width: 20px; height: 20px; margin-top: 3px; border-radius: 50%; display: grid; place-items: center; background: #2f7de1; color: #fff; }
+.cs-card { background: var(--cs-card); border-radius: 22px; padding: clamp(24px, 3.5vw, 52px); display: flex; flex-direction: column; gap: 14px; }
+.cs-title { font-size: clamp(2.2rem, 3.6vw, 3.1rem); line-height: 1.1; }
+.cs-title em { font-style: italic; }
+.cs-title strong { font-weight: 700; font-style: italic; }
+.cs-sub { font-size: 1.12rem; margin-bottom: 10px; }
+.cs-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 22px; }
+.cs-form label { display: flex; flex-direction: column; gap: 8px; font-weight: 500; font-size: 0.95rem; min-width: 0; }
+.cs-form label b { font-weight: 500; }
+.cs-span { grid-column: 1 / -1; }
+.cs input, .cs select { background: #fff; color: var(--cs-ink); border: 1px solid var(--cs-line); border-radius: 6px; min-height: 52px; padding: 10px 16px; font-size: 1rem; }
+.cs input::placeholder { color: #8a8a86; }
+.cs input:focus, .cs select:focus { border-color: var(--cs-ink); box-shadow: 0 0 0 3px rgba(27, 27, 27, 0.12); }
+.cs-preview { margin-top: -8px; color: #4d4d49; font-size: 0.92rem; }
+.cs-preview strong { color: var(--cs-ink); font-weight: 600; }
+.cs-actions { padding-top: 6px; }
+.cs-btn { font: inherit; font-weight: 600; font-size: 1.1rem; color: #fff; background: var(--cs-ink); border: 1px solid var(--cs-ink); border-radius: 999px; padding: 15px 44px; cursor: pointer; transition: background 0.15s, transform 0.15s; }
+.cs-btn:hover:not(:disabled) { background: #000; transform: translateY(-1px); }
+.cs-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+@media (max-width: 900px) {
+  .cs-main { grid-template-columns: 1fr; }
+  .cs-intro { padding-top: 0; }
+  .cs-points { font-size: 1rem; }
+  }
+@media (max-width: 560px) {
+  .cs-form { grid-template-columns: 1fr; }
+  .cs-btn { width: 100%; }
+  }

@@ -26,8 +26,15 @@ app:
     name: ${MANAGER_NAME:Manager}
     email: ${MANAGER_EMAIL:}
     password: ${MANAGER_PASSWORD:}
+  # Workspaces live at <company>.<root domain>; the root domain itself is the public sign-up site.
+  root-domain: ${ROOT_DOMAIN:localhost}
+  # Everything from before workspaces existed lives in this workspace (app.workpulselens.com).
+  default-workspace:
+    slug: ${DEFAULT_WORKSPACE:app}
+    name: ${DEFAULT_WORKSPACE_NAME:WorkPulseLens}
   rate-limit:
     credentials-per-15-min: ${AUTH_RATE_LIMIT:20}
+    signups-per-hour: ${SIGNUP_RATE_LIMIT:5}
 management:
   endpoints:
     web:
