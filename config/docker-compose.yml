@@ -39,7 +39,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      # Four Java services starting together on a 2 GB server take a few minutes.
+      start_period: 300s
     environment:
       <<: *service-env
       PORT: 4001
@@ -64,7 +65,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 300s
     environment:
       <<: *service-env
       PORT: 4002
@@ -80,7 +81,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 300s
     environment:
       <<: *service-env
       PORT: 4003
@@ -99,7 +100,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 300s
     environment:
       <<: *service-env
       PORT: 4004
