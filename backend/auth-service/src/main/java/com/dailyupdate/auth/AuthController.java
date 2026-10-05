@@ -7,19 +7,16 @@ import com.dailyupdate.common.RateLimiter;
 import com.dailyupdate.common.SecuritySupport;
 import com.dailyupdate.common.TenantContext;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -27,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final UserRepository users;
-    private final UserService userService;
     private final Workspaces workspaces;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -35,29 +31,15 @@ public class AuthController {
     // Checked when the email is unknown so both failure paths take the same time.
     private final String dummyHash;
 
-    public AuthController(UserRepository users, UserService userService, Workspaces workspaces,
+    public AuthController(UserRepository users, Workspaces workspaces,
             PasswordEncoder passwordEncoder, JwtService jwtService,
             @Value("${app.rate-limit.credentials-per-15-min}") int limit) {
         this.users = users;
-        this.userService = userService;
         this.workspaces = workspaces;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.credentialLimiter = new RateLimiter(limit, Duration.ofMinutes(15));
         this.dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
-    }
-
-    /**
-     * Joining a company's workspace (on its own address) always creates an employee. Managers are
-     * created by an admin or manager.
-     */
-    @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, Object> register(@Valid @RequestBody Requests.Register body, HttpServletRequest request) {
-        limit(request);
-        Company company = workspaces.require(request);
-        return TenantContext.call(company.id(), () -> session(userService.create(body.name(), body.email(),
-                body.password(), body.team(), body.position(), body.office(), AuthUser.EMPLOYEE), company));
     }
 
     /** Logging in only works on a company's own address, and only for that company's accounts. */

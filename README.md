@@ -162,7 +162,7 @@ Then build and start everything (the first build downloads Maven and npm package
 docker compose -f config/docker-compose.yml up -d --build
 ```
 
-Open http://localhost:8080 for the public site, where you can sign a company up. Each workspace opens at `http://<address>.localhost:8080` (Chrome, Edge and Firefox send `*.localhost` to your own computer). The admin and manager from `config/.env` are in the default workspace: log in at http://app.localhost:8080, or use **Sign up** there to create employee accounts.
+Open http://localhost:8080 for the public site, where you can sign a company up. Each workspace opens at `http://<address>.localhost:8080` (Chrome, Edge and Firefox send `*.localhost` to your own computer). The admin and manager from `config/.env` are in the default workspace: log in at http://app.localhost:8080. Workspaces have no sign-up page: an admin adds employees from the **Accounts** page.
 
 Stop with `docker compose -f config/docker-compose.yml down` (add `-v` to also delete the database).
 
@@ -199,7 +199,6 @@ All endpoints except sign-up, login and the `/api/companies` lookups need `Autho
 | POST | `/api/companies` `{companyName, name, email, password, orgSize, phone}` | anyone | Sign a company up; creates its workspace (address made from the company name) with that person as admin |
 | GET | `/api/companies/current` | anyone | Which workspace this address is (`null` on the public site) and the root domain |
 | GET | `/api/companies/tls-check?domain=` | Caddy | 200 if the address is ours, so Caddy may get it a certificate |
-| POST | `/api/auth/register` | anyone | Join this workspace as an employee, returns a token |
 | POST | `/api/auth/login` | anyone | Log in to this workspace, returns a token |
 | GET | `/api/auth/me` | any user | Current user |
 | PATCH | `/api/auth/me` `{office}` | any user | Pick your own office (decides your holidays) |
